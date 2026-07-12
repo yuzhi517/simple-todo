@@ -7,6 +7,7 @@ from server.storage import (
     load_tasks, get_task, add_task,
     mark_done, mark_undone, delete_task,
     update_priority, search_tasks,
+    NotFoundError, ConflictError,
 )
 
 app = FastAPI(title="Simple Todo API", version="1.0.0")
@@ -34,12 +35,7 @@ def list_tasks(all: bool = Query(False, alias="all")):
     - `all=false`（默认）：只返回未完成的任务
     - `all=true`：返回所有任务（含已完成）
     """
-    tasks = load_tasks()
-
-    if not all:
-        tasks = [t for t in tasks if not t['done']]
-
-    return tasks
+    return load_tasks(all=all)
 
 
 @app.get("/tasks/search", response_model=list[Task])
@@ -66,42 +62,38 @@ def add_task_endpoint(body: TaskCreate):
 @app.put("/tasks/{task_id}/done", response_model=Task)
 def done_task(task_id: int):
     """将任务标记为已完成。"""
-    task = get_task(task_id)
-    if task is None:
-        raise HTTPException(status_code=404, detail=f"任务 [{task_id}] 未找到")
-    if task['done']:
-        raise HTTPException(status_code=400, detail=f"任务 [{task_id}] 已经是已完成状态")
-
-    return mark_done(task_id)
+    try:
+        return mark_done(task_id)
+    except NotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except ConflictError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @app.put("/tasks/{task_id}/undone", response_model=Task)
 def undone_task(task_id: int):
     """将任务恢复为未完成。"""
-    task = get_task(task_id)
-    if task is None:
-        raise HTTPException(status_code=404, detail=f"任务 [{task_id}] 未找到")
-    if not task['done']:
-        raise HTTPException(status_code=400, detail=f"任务 [{task_id}] 当前就是未完成状态")
+    try:
+        return mark_undone(task_id)
+    except NotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except ConflictError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
-    return mark_undone(task_id)
 
-
-@app.delete("/tasks/{task_id}")
+@app.delete("/tasks/{task_id}", response_model=Task)
 def delete_task_endpoint(task_id: int):
     """删除一条任务。"""
-    deleted = delete_task(task_id)
-    if deleted is None:
-        raise HTTPException(status_code=404, detail=f"任务 [{task_id}] 未找到")
-
-    return {"message": f"任务 [{task_id}] 已删除: {deleted['title']}", "task": deleted}
+    try:
+        return delete_task(task_id)
+    except NotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
 
 @app.put("/tasks/{task_id}/priority", response_model=Task)
 def set_priority(task_id: int, body: TaskUpdate):
     """修改任务优先级。"""
-    task = get_task(task_id)
-    if task is None:
-        raise HTTPException(status_code=404, detail=f"任务 [{task_id}] 未找到")
-
-    return update_priority(task_id, body.priority)
+    try:
+        return update_priority(task_id, body.priority)
+    except NotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
