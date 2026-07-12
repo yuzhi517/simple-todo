@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+gen_ppt.py
+中期汇报.pptx
+.DS_Store
