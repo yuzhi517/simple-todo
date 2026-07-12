@@ -6,8 +6,8 @@
 
 | 版本 | 目录 | 简介 |
 |------|------|------|
-| **v2**（当前） | `server/` + `client/` | 前后端分离架构，FastAPI REST API + 零依赖 CLI 客户端 |
-| **v1**（保留） | `simple-todo/todo.py` | 单文件实现，纯标准库，数据格式与 v2 完全兼容 |
+| **v2**（当前） | `server/` + `client/` | 前后端分离架构，FastAPI REST API + SQLite 存储 + 零依赖 CLI |
+| **v1**（保留） | `simple-todo/todo.py` | 单文件实现，纯标准库 + JSON 存储，首次启动可自动迁移到 v2 |
 
 ## 架构概览
 
@@ -16,7 +16,7 @@ simple-todo/
 ├── server/                    # 后端 API 服务 (FastAPI)
 │   ├── main.py               # API 入口，定义所有端点
 │   ├── models.py             # 数据模型 (Pydantic)
-│   ├── storage.py            # 持久化层 (JSON 读写 + 并发保护)
+│   ├── storage.py            # 持久化层 (SQLite + WAL 模式)
 │   └── requirements.txt      # 后端依赖
 ├── client/                    # CLI 客户端 (纯标准库，零依赖)
 │   ├── cli.py                # 命令行入口
@@ -40,7 +40,7 @@ simple-todo/
 - ✅ **REST API** — 后端提供标准 HTTP 接口，可用 curl/Postman 调用
 - ✅ **前后端分离** — CLI 和 API 服务可独立运行、独立部署
 - ✅ **零依赖客户端** — 只靠 Python 标准库，复制就能用
-- ✅ **JSON 存储** — 数据透明，格式与 v1 完全兼容
+- ✅ **SQLite 存储** — 数据库文件存储，WAL 模式支持并发，首次启动自动从 v1 JSON 迁移
 
 ## 快速开始
 
@@ -126,19 +126,31 @@ curl http://127.0.0.1:8000/tasks/search?q=报告
 
 ## 数据存储
 
-所有数据存放于 `~/.simple_todo/tasks.json`：
+所有数据存放于 `~/.simple_todo/tasks.db`（SQLite 数据库）。
 
-```json
-[
-  {
-    "id": 1,
-    "title": "完成中期报告",
-    "priority": 1,
-    "done": true,
-    "created_at": 1752053425.123,
-    "done_at": 1752053520.456
-  }
-]
+首次启动时，如果检测到旧版 `~/.simple_todo/tasks.json`，会自动迁移数据到 SQLite 并将 JSON 文件备份为 `.migrated`。
+
+### 查看数据
+
+```bash
+# 用 sqlite3 命令行查看
+sqlite3 ~/.simple_todo/tasks.db "SELECT * FROM tasks"
+
+# 或用任意 SQLite 客户端打开
+open ~/.simple_todo/tasks.db
+```
+
+### 数据表结构
+
+```sql
+CREATE TABLE tasks (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    title       TEXT NOT NULL,
+    priority    INTEGER NOT NULL DEFAULT 1 CHECK(priority >= 1 AND priority <= 5),
+    done        INTEGER NOT NULL DEFAULT 0,
+    created_at  REAL NOT NULL,
+    done_at     REAL
+);
 ```
 
 ## 环境变量
@@ -152,7 +164,7 @@ curl http://127.0.0.1:8000/tasks/search?q=报告
 1. **前后端分离** — 后端专注数据管理，前端专注交互体验
 2. **双击就能用** — 启动脚本自动管理后端生命周期
 3. **中文优先** — 原生中文支持和终端对齐
-4. **数据透明** — JSON 格式存储，可随时查看修改
+4. **数据透明** — SQLite 单文件存储，可用任意 SQLite 客户端查看修改
 5. **API 优先** — 所有功能通过 REST API 暴露
 6. **客户端零依赖** — 只靠 Python 标准库
 
