@@ -157,11 +157,10 @@ def add_task(title: str, priority: int) -> dict:
             (title, priority, now)
         )
         conn.commit()
-        task_id = cur.lastrowid
-    return {
-        'id': task_id, 'title': title, 'priority': priority,
-        'done': False, 'created_at': now, 'done_at': None,
-    }
+        row = conn.execute(
+            "SELECT * FROM tasks WHERE id = ?", (cur.lastrowid,)
+        ).fetchone()
+    return _row_to_dict(row)
 
 
 def mark_done(task_id: int) -> dict:
