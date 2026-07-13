@@ -2,11 +2,12 @@
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from server.models import Task, TaskCreate, TaskUpdate
+from server.models import Task, TaskCreate, TaskUpdate, FocusUpdate, DeadlineUpdate, NotesUpdate
 from server.storage import (
     load_tasks, get_task, add_task,
     mark_done, mark_undone, delete_task,
-    update_priority, search_tasks,
+    update_priority, update_focus, update_deadline, update_notes,
+    search_tasks,
     NotFoundError, ConflictError,
 )
 
@@ -56,7 +57,7 @@ def get_task_endpoint(task_id: int):
 @app.post("/tasks", response_model=Task, status_code=201)
 def add_task_endpoint(body: TaskCreate):
     """添加一条新任务。"""
-    return add_task(body.title, body.priority)
+    return add_task(body.title, body.priority, body.deadline, body.focus, body.notes)
 
 
 @app.put("/tasks/{task_id}/done", response_model=Task)
@@ -95,5 +96,32 @@ def set_priority(task_id: int, body: TaskUpdate):
     """修改任务优先级。"""
     try:
         return update_priority(task_id, body.priority)
+    except NotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.put("/tasks/{task_id}/focus", response_model=Task)
+def set_focus(task_id: int, body: FocusUpdate):
+    """切换任务聚焦状态。"""
+    try:
+        return update_focus(task_id, body.focus)
+    except NotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.put("/tasks/{task_id}/deadline", response_model=Task)
+def set_deadline(task_id: int, body: DeadlineUpdate):
+    """更新任务截止日期。"""
+    try:
+        return update_deadline(task_id, body.deadline)
+    except NotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.put("/tasks/{task_id}/notes", response_model=Task)
+def set_notes(task_id: int, body: NotesUpdate):
+    """更新任务备注。"""
+    try:
+        return update_notes(task_id, body.notes)
     except NotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))

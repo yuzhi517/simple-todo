@@ -82,8 +82,8 @@ export async function getTask(id) {
 }
 
 /** POST /tasks — 创建任务 */
-export async function createTask(title, priority = 1) {
-    return _request('POST', '/tasks', { title, priority });
+export async function createTask(title, priority = 1, deadline = null, focus = false, notes = null) {
+    return _request('POST', '/tasks', { title, priority, deadline, focus, notes });
 }
 
 /** PUT /tasks/{id}/done — 标记完成 */
@@ -104,4 +104,19 @@ export async function deleteTask(id) {
 /** PUT /tasks/{id}/priority — 更新优先级 */
 export async function updatePriority(id, priority) {
     return _request('PUT', `/tasks/${id}/priority`, { priority });
+}
+
+/** PUT /tasks/{id}/focus — 切换聚焦状态 */
+export async function updateFocus(id, focus) {
+    return _request('PUT', `/tasks/${id}/focus`, { focus });
+}
+
+/** PUT /tasks/{id}/deadline — 更新截止日期 */
+export async function updateDeadline(id, deadline) {
+    return _request('PUT', `/tasks/${id}/deadline`, { deadline });
+}
+
+/** PUT /tasks/{id}/notes — 更新备注 */
+export async function updateNotes(id, notes) {
+    return _request('PUT', `/tasks/${id}/notes`, { notes });
 }

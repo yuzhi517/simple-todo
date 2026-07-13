@@ -8,19 +8,109 @@
 </head>
 <body>
     <div id="app">
+        <!-- Header + 工具栏 -->
         <header class="st-header">
-            <h1 class="st-title">Simple Todo</h1>
-            <span class="st-subtitle">待办事项</span>
+            <div class="st-header__left">
+                <h1 class="st-title">Simple Todo</h1>
+                <span class="st-subtitle">待办事项</span>
+            </div>
+            <div id="toolbar" class="st-toolbar"></div>
         </header>
 
-        <div id="status-bar"></div>
-        <div id="search-bar"></div>
-        <div id="task-form"></div>
+        <!-- 搜索面板（可折叠） -->
+        <div id="search-panel" class="st-panel st-panel--collapsed">
+            <div id="search-bar"></div>
+        </div>
+
+        <!-- 任务列表（含视图切换 + 状态栏 + 任务） -->
         <div id="task-list"></div>
     </div>
 
+    <!-- 添加任务弹窗 -->
+    <div id="create-modal" class="st-modal st-modal--hidden">
+        <div class="st-modal__backdrop" data-action="create-close"></div>
+        <div class="st-modal__box st-modal__box--wide">
+            <div class="st-modal__header">
+                <span>新建任务</span>
+                <button class="st-modal__close" data-action="create-close">×</button>
+            </div>
+            <div class="st-modal__body">
+                <input type="text" id="create-title" class="st-form__input"
+                       placeholder="任务标题" maxlength="500" autocomplete="off">
+                <div class="st-create-row">
+                    <input type="date" id="create-deadline" class="st-form__input"
+                           style="max-width: 160px;">
+                    <label class="st-form__check">
+                        <input type="checkbox" id="create-longterm"> 长期
+                    </label>
+                    <label class="st-form__check">
+                        <input type="checkbox" id="create-focus"> 聚焦
+                        <span class="st-form__hint" title="重要及需要优先完成的任务勾选">?</span>
+                    </label>
+                </div>
+                <textarea id="create-notes" class="st-modal__textarea"
+                          placeholder="待办具体内容（可选）..." rows="4"></textarea>
+            </div>
+            <div class="st-modal__footer">
+                <button class="st-modal__btn st-modal__btn--cancel" data-action="create-close">取消</button>
+                <button class="st-modal__btn st-modal__btn--save" data-action="create-submit">添加任务</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 任务详情弹窗 -->
+    <div id="detail-modal" class="st-modal st-modal--hidden">
+        <div class="st-modal__backdrop" data-action="detail-close"></div>
+        <div class="st-modal__box st-modal__box--wide">
+            <div class="st-modal__header">
+                <span id="detail-title"></span>
+                <button class="st-modal__close" data-action="detail-close">×</button>
+            </div>
+            <div class="st-modal__body">
+                <div id="detail-meta" style="font-size:13px; color:var(--st-color-text-muted); margin-bottom:12px;"></div>
+                <div id="detail-notes"
+                     style="white-space:pre-wrap; line-height:1.7; font-size:14px; color:var(--st-color-text);"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 删除确认弹窗 -->
+    <div id="delete-modal" class="st-modal st-modal--hidden">
+        <div class="st-modal__backdrop" data-action="delete-cancel"></div>
+        <div class="st-modal__box" style="max-width: 360px; text-align: center;">
+            <div class="st-modal__header" style="border-bottom: none; justify-content: center;">
+                <span>确认删除</span>
+            </div>
+            <div class="st-modal__body" style="text-align: center; padding-top: 0;">
+                <p style="font-size: 16px;">是否删除<span id="delete-task-title" style="font-weight: 600;"></span></p>
+            </div>
+            <div class="st-modal__footer" style="justify-content: center; border-top: none;">
+                <button class="st-modal__btn st-modal__btn--cancel" data-action="delete-cancel">取消</button>
+                <button class="st-modal__btn st-modal__btn--save"
+                        style="background: var(--st-color-danger); border-color: var(--st-color-danger);"
+                        data-action="delete-confirm">删除</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 编辑备注弹窗 -->
+    <div id="notes-modal" class="st-modal st-modal--hidden">
+        <div class="st-modal__backdrop" data-action="notes-close"></div>
+        <div class="st-modal__box">
+            <div class="st-modal__header">
+                <span id="notes-modal-title">编辑备注</span>
+                <button class="st-modal__close" data-action="notes-close">×</button>
+            </div>
+            <textarea id="notes-textarea" class="st-modal__textarea"
+                      placeholder="添加详细备注..."></textarea>
+            <div class="st-modal__footer">
+                <button class="st-modal__btn st-modal__btn--cancel" data-action="notes-close">取消</button>
+                <button class="st-modal__btn st-modal__btn--save" data-action="notes-save">保存</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // 可在此处修改后端 API 地址
         window.TODO_API_URL = window.TODO_API_URL || 'http://127.0.0.1:8000';
     </script>
     <script type="module" src="js/app.js"></script>

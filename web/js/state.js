@@ -12,8 +12,10 @@ const _state = {
     showAll: false,      // 是否显示全部（含已完成）
     loading: false,      // 是否有请求进行中
     error: null,         // { message: string } | null
-    searchActive: false, // 是否处于搜索模式
+    searchActive: false, // 是否处于搜索结果展示中
     searchQuery: '',     // 当前搜索关键词
+    searchMode: false,   // 搜索面板是否展开
+    manageMode: false,   // 管理面板是否展开
     connectionOk: true,  // 后端是否可达
 };
 
@@ -142,3 +144,17 @@ export function clearSearch() {
     _state.searchQuery = '';
     _emit();
 }
+
+/** 切换搜索面板展开/收起 */
+export function setSearchMode(on) {
+    _state.searchMode = on;
+    // 收起面板时不清除搜索结果，只是隐藏搜索框
+    _emit();
+}
+
+/** 切换管理面板展开/收起 */
+export function setManageMode(on) {
+    _state.manageMode = on;
+    _emit();
+}
+

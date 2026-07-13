@@ -1,7 +1,7 @@
 // ==========================================
 // search-bar.js — 搜索栏组件
 // 不订阅 state，不调 api
-// 派发事件: search-submit (detail: { query }), search-clear
+// 派发事件: search-submit, search-clear, search-close
 // ==========================================
 
 let _debounceTimer = null;
@@ -27,27 +27,31 @@ export function renderSearchBar(container) {
                 <button
                     class="st-search__clear"
                     id="search-clear-btn"
-                    title="清除搜索"
+                    title="清除搜索内容"
                 >×</button>
             </div>
+            <button
+                class="st-search__close"
+                id="search-close-btn"
+                title="关闭搜索"
+            >关闭</button>
         </div>
     `;
 
     const input = container.querySelector('#search-input');
     const clearBtn = container.querySelector('#search-clear-btn');
+    const closeBtn = container.querySelector('#search-close-btn');
 
     // 输入防抖 → 派发搜索事件
     input.addEventListener('input', () => {
         const query = input.value;
 
-        // 显示/隐藏清除按钮
         if (query.length > 0) {
             clearBtn.classList.add('st-search__clear--visible');
         } else {
             clearBtn.classList.remove('st-search__clear--visible');
         }
 
-        // 防抖
         clearTimeout(_debounceTimer);
         _debounceTimer = setTimeout(() => {
             if (query.trim()) {
@@ -63,7 +67,7 @@ export function renderSearchBar(container) {
         }, DEBOUNCE_MS);
     });
 
-    // 清除按钮
+    // 清除按钮 → 清空输入 + 恢复列表
     clearBtn.addEventListener('click', () => {
         input.value = '';
         clearBtn.classList.remove('st-search__clear--visible');
@@ -72,6 +76,13 @@ export function renderSearchBar(container) {
             bubbles: true,
         }));
         input.focus();
+    });
+
+    // 关闭按钮 → 关闭搜索面板
+    closeBtn.addEventListener('click', () => {
+        container.dispatchEvent(new CustomEvent('search-close', {
+            bubbles: true,
+        }));
     });
 
     // Enter 键立即提交
@@ -87,4 +98,16 @@ export function renderSearchBar(container) {
             }
         }
     });
+}
+
+/**
+ * 聚焦搜索框（面板展开时由 app.js 调用）
+ * @param {HTMLElement} container
+ */
+export function focusSearchInput(container) {
+    if (!container) return;
+    const input = container.querySelector('#search-input');
+    if (input) {
+        setTimeout(() => input.focus(), 100);
+    }
 }

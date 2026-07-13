@@ -1,35 +1,25 @@
 // ==========================================
-// status-bar.js — 状态栏组件
-// 订阅 state，显示：连接状态、任务计数、加载指示器、错误横幅
-// 不派发事件，纯展示
+// status-bar.js — 状态栏组件（纯渲染函数）
+// 不订阅 state，由 app.js 调用
 // ==========================================
-
-import * as state from '../state.js';
 
 /**
  * 渲染状态栏
  * @param {HTMLElement} container
+ * @param {object} s - 状态快照
  */
-export function renderStatusBar(container) {
+export function renderStatusBar(container, s) {
     if (!container) return;
 
-    // 初始渲染
-    _render(container, state.getState());
-
-    // 订阅状态变化
-    state.on('change', (newState) => _render(container, newState));
-}
-
-function _render(container, s) {
     const doneCount = s.allTasks.filter(t => t.done).length;
     const totalCount = s.allTasks.length;
+    const focusCount = s.allTasks.filter(t => t.focus && !t.done).length;
 
     let html = '<div class="st-status">';
 
-    // 左侧：连接状态 + 任务计数
     html += '<div class="st-status__left">';
     if (s.loading) {
-        html += '<span class="st-status__loading">⏳ 同步中...</span>';
+        html += '<span class="st-status__loading">同步中...</span>';
     } else {
         const dotClass = s.connectionOk ? 'st-status__dot--ok' : 'st-status__dot--err';
         html += `<span class="st-status__dot ${dotClass}"></span>`;
@@ -40,6 +30,9 @@ function _render(container, s) {
             html += '还没有任务';
         } else {
             html += `共 ${totalCount} 条任务`;
+            if (focusCount > 0) {
+                html += `，◆ ${focusCount} 条聚焦`;
+            }
             if (doneCount > 0) {
                 html += `，${doneCount} 条已完成`;
             }
@@ -54,22 +47,12 @@ function _render(container, s) {
     if (s.error) {
         html += `
             <div class="st-error">
-                <span>⚠ ${escapeHtml(s.error.message)}</span>
+                <span>${escapeHtml(s.error.message)}</span>
                 <button class="st-error__dismiss" data-action="dismiss-error" title="关闭">×</button>
             </div>`;
     }
 
     container.innerHTML = html;
-
-    // 绑定错误关闭按钮（通过事件冒泡，由 app.js 处理）
-    const dismissBtn = container.querySelector('[data-action="dismiss-error"]');
-    if (dismissBtn) {
-        dismissBtn.addEventListener('click', () => {
-            container.dispatchEvent(new CustomEvent('dismiss-error', {
-                bubbles: true,
-            }));
-        });
-    }
 }
 
 function escapeHtml(str) {

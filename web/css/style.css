@@ -67,11 +67,17 @@ body {
 
 .st-header {
     display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--st-color-border);
+}
+
+.st-header__left {
+    display: flex;
     align-items: baseline;
     gap: var(--st-gap);
-    margin-bottom: 20px;
-    padding-bottom: 16px;
-    border-bottom: 2px solid var(--st-color-border);
 }
 
 .st-title {
@@ -84,6 +90,67 @@ body {
     font-size: 16px;
     color: var(--st-color-text-muted);
     font-weight: 400;
+}
+
+/* ==========================================
+   Toolbar
+   ========================================== */
+
+.st-toolbar {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.st-toolbar__btn {
+    padding: 5px 14px;
+    font-size: 13px;
+    font-family: var(--st-font);
+    font-weight: 600;
+    border: 1px solid var(--st-color-border);
+    border-radius: var(--st-radius);
+    background: var(--st-color-surface);
+    color: var(--st-color-text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+}
+
+.st-toolbar__btn:hover {
+    border-color: var(--st-color-accent);
+    color: var(--st-color-accent);
+}
+
+.st-toolbar__btn--active {
+    background: var(--st-color-accent);
+    border-color: var(--st-color-accent);
+    color: #fff;
+}
+
+/* ==========================================
+   Collapsible Panels
+   ========================================== */
+
+.st-panel {
+    overflow: hidden;
+    transition: max-height 0.25s ease, opacity 0.2s ease, margin 0.25s ease;
+}
+
+.st-panel--collapsed {
+    max-height: 0 !important;
+    opacity: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+.st-panel--expanded {
+    max-height: 200px;
+    opacity: 1;
+    margin-bottom: var(--st-gap);
+}
+
+#search-panel.st-panel--expanded {
+    max-height: 60px;
 }
 
 /* ==========================================
@@ -171,7 +238,15 @@ body {
    ========================================== */
 
 .st-search {
+    display: flex;
+    gap: 8px;
+    align-items: center;
     margin-bottom: var(--st-gap);
+}
+
+.st-search__wrap {
+    position: relative;
+    flex: 1;
 }
 
 .st-search__input {
@@ -196,8 +271,23 @@ body {
     color: var(--st-color-text-muted);
 }
 
-.st-search__wrap {
-    position: relative;
+.st-search__close {
+    padding: 8px 14px;
+    font-size: 13px;
+    font-family: var(--st-font);
+    border: 1px solid var(--st-color-border);
+    border-radius: var(--st-radius);
+    background: var(--st-color-surface);
+    color: var(--st-color-text-muted);
+    cursor: pointer;
+    transition: all 0.12s;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.st-search__close:hover {
+    border-color: var(--st-color-danger);
+    color: var(--st-color-danger);
 }
 
 .st-search__clear {
@@ -231,8 +321,39 @@ body {
 
 .st-form {
     display: flex;
-    gap: 8px;
+    flex-direction: column;
+    gap: 6px;
     margin-bottom: var(--st-gap);
+}
+
+.st-form__row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.st-form__textarea {
+    width: 100%;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-family: var(--st-font);
+    border: 1px solid var(--st-color-border);
+    border-radius: var(--st-radius);
+    background: var(--st-color-surface);
+    color: var(--st-color-text-muted);
+    outline: none;
+    resize: vertical;
+    line-height: 1.5;
+    transition: border-color 0.2s;
+}
+
+.st-form__textarea:focus {
+    border-color: var(--st-color-accent);
+    color: var(--st-color-text);
+}
+
+.st-form__textarea::placeholder {
+    color: var(--st-color-text-muted);
 }
 
 .st-form__input {
@@ -258,6 +379,48 @@ body {
 
 .st-form__input--error {
     border-color: var(--st-color-danger);
+}
+
+.st-form__input:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* Checkbox label (长期 / 聚焦) */
+.st-form__check {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    color: var(--st-color-text-muted);
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+}
+
+.st-form__check input[type="checkbox"] {
+    cursor: pointer;
+}
+
+/* 问号提示图标 */
+.st-form__hint {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--st-color-border);
+    color: var(--st-color-text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    cursor: help;
+    line-height: 1;
+}
+
+.st-form__hint:hover {
+    background: var(--st-color-accent);
+    color: #fff;
 }
 
 .st-form__priority {
@@ -423,6 +586,11 @@ body {
     flex: 1;
     font-size: 15px;
     word-break: break-word;
+    cursor: pointer;
+}
+
+.st-task__title:hover {
+    color: var(--st-color-accent);
 }
 
 /* Date */
@@ -495,12 +663,217 @@ body {
     background: #fff0f0;
 }
 
+/* Focus Button */
+.st-task__btn--focus {
+    color: #b8860b;
+    border-color: #daa520;
+}
+
+.st-task__btn--focus:hover {
+    background: #fffde8;
+}
+
+/* Focus Star */
+.st-task__focus-star {
+    font-size: 14px;
+    flex-shrink: 0;
+    line-height: 1;
+    color: #daa520;
+}
+
+/* Focused Task Card */
+.st-task--focus {
+    border-color: #daa520;
+    box-shadow: 0 0 8px rgba(218, 165, 32, 0.15);
+}
+
+/* Deadline Display */
+.st-task__deadline {
+    font-size: 12px;
+    color: var(--st-color-text-muted);
+    white-space: nowrap;
+}
+
+/* Expired Deadline */
+.st-task__deadline--expired {
+    color: var(--st-color-danger);
+    font-weight: 600;
+    animation: st-blink 1.5s ease-in-out infinite;
+}
+
+@keyframes st-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Edit Button */
+.st-task__btn--edit {
+    color: var(--st-color-accent);
+    border-color: var(--st-color-accent);
+}
+
+.st-task__btn--edit:hover {
+    background: #e8f0fa;
+}
+
+/* Notes Badge */
+.st-task__notes-badge {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--st-color-text-muted);
+    margin-left: 6px;
+    vertical-align: middle;
+    cursor: default;
+}
+
+/* ==========================================
+   Modal
+   ========================================== */
+
+.st-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.st-modal--hidden {
+    display: none;
+}
+
+.st-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.st-modal__box {
+    position: relative;
+    background: var(--st-color-surface);
+    border: 1px solid var(--st-color-border);
+    border-radius: var(--st-radius);
+    width: 90%;
+    max-width: 480px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+    animation: st-modal-in 0.2s ease;
+}
+
+.st-modal__box--wide {
+    max-width: 540px;
+}
+
+.st-modal__body {
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.st-create-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+@keyframes st-modal-in {
+    from { opacity: 0; transform: scale(0.95) translateY(-10px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.st-modal__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px 12px;
+    font-weight: 600;
+    font-size: 15px;
+    border-bottom: 1px solid var(--st-color-border);
+}
+
+.st-modal__close {
+    background: none;
+    border: none;
+    font-size: 22px;
+    color: var(--st-color-text-muted);
+    cursor: pointer;
+    line-height: 1;
+    padding: 0 4px;
+}
+
+.st-modal__close:hover {
+    color: var(--st-color-text);
+}
+
+.st-modal__textarea {
+    display: block;
+    width: 100%;
+    min-height: 160px;
+    padding: 12px 14px;
+    font-size: 14px;
+    font-family: var(--st-font);
+    border: 1px solid var(--st-color-border);
+    border-radius: var(--st-radius);
+    outline: none;
+    resize: vertical;
+    background: var(--st-color-surface);
+    color: var(--st-color-text);
+    line-height: 1.6;
+}
+
+.st-modal__textarea:focus {
+    border-color: var(--st-color-accent);
+    box-shadow: 0 0 0 3px rgba(74, 144, 217, 0.12);
+}
+
+.st-modal__textarea::placeholder {
+    color: var(--st-color-text-muted);
+}
+
+.st-modal__footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 12px 20px 16px;
+    border-top: 1px solid var(--st-color-border);
+}
+
+.st-modal__btn {
+    padding: 8px 20px;
+    font-size: 14px;
+    font-family: var(--st-font);
+    border-radius: var(--st-radius);
+    cursor: pointer;
+    transition: all 0.12s;
+    border: 1px solid var(--st-color-border);
+    background: var(--st-color-surface);
+    color: var(--st-color-text);
+}
+
+.st-modal__btn--cancel:hover {
+    background: #f0f0f0;
+}
+
+.st-modal__btn--save {
+    background: var(--st-color-accent);
+    border-color: var(--st-color-accent);
+    color: #fff;
+    font-weight: 600;
+}
+
+.st-modal__btn--save:hover {
+    background: var(--st-color-accent-hover);
+}
+
 /* ==========================================
    Responsive
    ========================================== */
 
 @media (max-width: 520px) {
-    .st-form {
+    .st-form__row {
         flex-wrap: wrap;
     }
 

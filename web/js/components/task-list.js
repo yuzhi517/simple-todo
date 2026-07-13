@@ -3,7 +3,7 @@
 // 导入 task-item.js（纯渲染子组件，合理）
 // 订阅 state，使用事件委托处理用户操作
 // 派发事件: task-done, task-undone, task-delete,
-//           task-priority-change, view-toggle, search-clear
+//           focus-toggle, view-toggle, search-clear
 // ==========================================
 
 import * as state from '../state.js';
@@ -28,7 +28,6 @@ export function renderTaskList(container) {
 
     // 事件委托：在容器上统一监听所有交互
     container.addEventListener('click', _handleClick);
-    container.addEventListener('change', _handleChange);
 }
 
 /**
@@ -69,6 +68,9 @@ function _handleClick(e) {
         'done': 'task-done',
         'undone': 'task-undone',
         'delete': 'task-delete',
+        'focus-toggle': 'focus-toggle',
+        'edit': 'task-edit',
+        'view-task': 'task-view',
     };
 
     const eventName = eventMap[action];
@@ -81,28 +83,11 @@ function _handleClick(e) {
 }
 
 /**
- * 事件委托 — 优先级下拉框变更
- */
-function _handleChange(e) {
-    if (e.target.dataset.action !== 'priority-change') return;
-
-    const taskEl = e.target.closest('.st-task');
-    if (!taskEl) return;
-
-    const taskId = parseInt(taskEl.dataset.taskId, 10);
-    const newPriority = parseInt(e.target.value, 10);
-
-    _listContainer.dispatchEvent(new CustomEvent('task-priority-change', {
-        detail: { id: taskId, priority: newPriority },
-        bubbles: true,
-    }));
-}
-
-/**
  * 渲染函数
  */
 function _render(container, s) {
-    const { tasks, showAll, searchActive, searchQuery, allTasks } = s;
+    const { tasks, showAll, searchActive, searchQuery, allTasks, manageMode } = s;
+    const showManage = manageMode;
 
     let html = '<div class="st-list">';
 
@@ -123,18 +108,18 @@ function _render(container, s) {
             </div>`;
     }
 
+    // 状态栏（放在视图切换下方）
+    html += '<div id="status-bar"></div>';
+
     // 空状态
     if (tasks.length === 0) {
         html += '<div class="st-list__empty">';
         if (searchActive) {
-            html += '<span class="st-list__empty-icon">🔍</span>';
             html += `<p>没有找到包含 "${escapeHtml(searchQuery)}" 的任务</p>`;
         } else if (!showAll && allTasks.length > 0) {
-            html += '<span class="st-list__empty-icon">🎉</span>';
-            html += '<p>全部任务都完成了！</p>';
+            html += '<p>全部任务都完成了</p>';
         } else {
-            html += '<span class="st-list__empty-icon">📝</span>';
-            html += '<p>还没有任何任务，在上面添加一个吧</p>';
+            html += '<p>还没有任何任务</p>';
         }
         html += '</div>';
     } else if (showAll && !searchActive) {
@@ -145,18 +130,18 @@ function _render(container, s) {
         if (undone.length > 0) {
             html += '<div class="st-list__group">';
             html += '<div class="st-list__group-header">未完成</div>';
-            html += undone.map(renderTaskItem).join('');
+            html += undone.map((t) => renderTaskItem(t, { showManage })).join('');
             html += '</div>';
         }
         if (done.length > 0) {
             html += '<div class="st-list__group">';
             html += '<div class="st-list__group-header">已完成</div>';
-            html += done.map(renderTaskItem).join('');
+            html += done.map((t) => renderTaskItem(t, { showManage })).join('');
             html += '</div>';
         }
     } else {
         // 平铺列表
-        html += tasks.map(renderTaskItem).join('');
+        html += tasks.map((t) => renderTaskItem(t, { showManage })).join('');
     }
 
     html += '</div>';

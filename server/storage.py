@@ -42,6 +42,14 @@ def _escape_like(keyword: str) -> str:
     return keyword.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_')
 
 
+def _ensure_column(conn: sqlite3.Connection, table: str, col: str, col_def: str):
+    """如果表中缺少指定列，自动 ALTER TABLE 添加（兼容旧数据库）。"""
+    cols = [row['name'] for row in conn.execute(f"PRAGMA table_info({table})").fetchall()]
+    if col not in cols:
+        conn.execute(f"ALTER TABLE {table} ADD COLUMN {col} {col_def}")
+        conn.commit()
+
+
 def _ensure_init():
     """线程安全的延迟初始化：首次调用时创建表 + 执行 JSON 迁移。"""
     global _init_done
@@ -59,10 +67,17 @@ def _ensure_init():
             id          INTEGER PRIMARY KEY AUTOINCREMENT,
             title       TEXT NOT NULL,
             priority    INTEGER NOT NULL DEFAULT 1 CHECK(priority >= 1 AND priority <= 5),
+            deadline    REAL,
+            focus       INTEGER NOT NULL DEFAULT 0,
+            notes       TEXT,
             done        INTEGER NOT NULL DEFAULT 0,
             created_at  REAL NOT NULL,
             done_at     REAL
         )""")
+        # 兼容旧表：如果缺少新列则自动添加
+        _ensure_column(conn, 'tasks', 'deadline', 'REAL')
+        _ensure_column(conn, 'tasks', 'focus', 'INTEGER NOT NULL DEFAULT 0')
+        _ensure_column(conn, 'tasks', 'notes', 'TEXT')
         conn.commit()
         _migrate_if_needed(conn)
         conn.close()
@@ -105,11 +120,14 @@ def _migrate_if_needed(conn: sqlite3.Connection):
 
 
 def _row_to_dict(row: sqlite3.Row) -> dict:
-    """sqlite3.Row → dict，done 从 INTEGER 转回 bool。"""
+    """sqlite3.Row → dict，done/focus 从 INTEGER 转回 bool。"""
     return {
         'id': row['id'],
         'title': row['title'],
         'priority': row['priority'],
+        'deadline': row['deadline'],
+        'focus': bool(row['focus']),
+        'notes': row['notes'],
         'done': bool(row['done']),
         'created_at': row['created_at'],
         'done_at': row['done_at'],
@@ -121,7 +139,8 @@ def _row_to_dict(row: sqlite3.Row) -> dict:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 def load_tasks(*, all: bool = True) -> list[dict]:
-    """获取任务列表，按优先级 → 创建时间排序。
+    """获取任务列表。
+    排序：聚焦优先 → 有截止日期的按时间排 → 长期的排最后 → 同组按创建时间
     - all=True：所有任务
     - all=False：只返回未完成的
     """
@@ -130,7 +149,7 @@ def load_tasks(*, all: bool = True) -> list[dict]:
     params = ()
     if not all:
         sql += " WHERE done = 0"
-    sql += " ORDER BY priority ASC, created_at ASC"
+    sql += " ORDER BY focus DESC, deadline IS NULL, deadline ASC, created_at ASC"
 
     with _get_conn() as conn:
         rows = conn.execute(sql, params).fetchall()
@@ -147,14 +166,16 @@ def get_task(task_id: int) -> dict | None:
     return _row_to_dict(row) if row else None
 
 
-def add_task(title: str, priority: int) -> dict:
+def add_task(title: str, priority: int = 1, deadline: float | None = None,
+             focus: bool = False, notes: str | None = None) -> dict:
     """创建任务，返回完整字典。"""
     _ensure_init()
     now = datetime.now().timestamp()
     with _get_conn() as conn:
         cur = conn.execute(
-            "INSERT INTO tasks (title, priority, done, created_at) VALUES (?, ?, 0, ?)",
-            (title, priority, now)
+            "INSERT INTO tasks (title, priority, deadline, focus, notes, done, created_at) "
+            "VALUES (?, ?, ?, ?, ?, 0, ?)",
+            (title, priority, deadline, int(focus), notes, now)
         )
         conn.commit()
         row = conn.execute(
@@ -273,6 +294,32 @@ def update_priority(task_id: int, priority: int) -> dict:
     return _row_to_dict(row)
 
 
+def update_notes(task_id: int, notes: str | None) -> dict:
+    """更新任务备注。
+
+    Raises:
+        NotFoundError: 任务不存在
+    """
+    _ensure_init()
+    with _get_conn() as conn:
+        conn.execute("BEGIN IMMEDIATE")
+        row = conn.execute(
+            "SELECT id FROM tasks WHERE id = ?", (task_id,)
+        ).fetchone()
+        if not row:
+            conn.rollback()
+            raise NotFoundError(f"任务 [{task_id}] 未找到")
+        conn.execute(
+            "UPDATE tasks SET notes = ? WHERE id = ?",
+            (notes, task_id)
+        )
+        conn.commit()
+        row = conn.execute(
+            "SELECT * FROM tasks WHERE id = ?", (task_id,)
+        ).fetchone()
+    return _row_to_dict(row)
+
+
 def search_tasks(keyword: str) -> list[dict]:
     """按标题搜索（大小写不敏感），已转义 LIKE 通配符。"""
     _ensure_init()
@@ -280,7 +327,59 @@ def search_tasks(keyword: str) -> list[dict]:
     with _get_conn() as conn:
         rows = conn.execute(
             "SELECT * FROM tasks WHERE title LIKE ? ESCAPE '\\' "
-            "ORDER BY priority ASC, created_at ASC",
+            "ORDER BY focus DESC, deadline IS NULL, deadline ASC, created_at ASC",
             (f'%{escaped}%',)
         ).fetchall()
     return [_row_to_dict(r) for r in rows]
+
+
+def update_focus(task_id: int, focus: bool) -> dict:
+    """切换聚焦状态。
+
+    Raises:
+        NotFoundError: 任务不存在
+    """
+    _ensure_init()
+    with _get_conn() as conn:
+        conn.execute("BEGIN IMMEDIATE")
+        row = conn.execute(
+            "SELECT id FROM tasks WHERE id = ?", (task_id,)
+        ).fetchone()
+        if not row:
+            conn.rollback()
+            raise NotFoundError(f"任务 [{task_id}] 未找到")
+        conn.execute(
+            "UPDATE tasks SET focus = ? WHERE id = ?",
+            (int(focus), task_id)
+        )
+        conn.commit()
+        row = conn.execute(
+            "SELECT * FROM tasks WHERE id = ?", (task_id,)
+        ).fetchone()
+    return _row_to_dict(row)
+
+
+def update_deadline(task_id: int, deadline: float | None) -> dict:
+    """更新截止日期（None 表示长期）。
+
+    Raises:
+        NotFoundError: 任务不存在
+    """
+    _ensure_init()
+    with _get_conn() as conn:
+        conn.execute("BEGIN IMMEDIATE")
+        row = conn.execute(
+            "SELECT id FROM tasks WHERE id = ?", (task_id,)
+        ).fetchone()
+        if not row:
+            conn.rollback()
+            raise NotFoundError(f"任务 [{task_id}] 未找到")
+        conn.execute(
+            "UPDATE tasks SET deadline = ? WHERE id = ?",
+            (deadline, task_id)
+        )
+        conn.commit()
+        row = conn.execute(
+            "SELECT * FROM tasks WHERE id = ?", (task_id,)
+        ).fetchone()
+    return _row_to_dict(row)
