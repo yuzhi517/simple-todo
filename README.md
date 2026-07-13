@@ -66,11 +66,12 @@ cd server
 pip install -r requirements.txt
 ```
 
-### 使用方法一：双击运行（推荐）
+### 使用方法一：双击运行（推荐，全平台通用）
 
-直接双击启动脚本：
-- **macOS** → 双击 [todo.command](todo.command)
-- **Windows** → 双击 [todo.bat](todo.bat)
+直接双击 [run.py](run.py)，自动启动后端 + Web 前端并打开浏览器。
+
+- **macOS**：双击 `run.py` 或 `todo.command`
+- **Windows**：双击 `run.py` 或 `todo.bat`
 
 ### 使用方法二：手动启动
 
