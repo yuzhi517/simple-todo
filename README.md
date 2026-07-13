@@ -6,7 +6,7 @@
 
 | 版本 | 目录 | 简介 |
 |------|------|------|
-| **v2**（当前） | `server/` + `client/` | 前后端分离架构，FastAPI REST API + SQLite 存储 + 零依赖 CLI |
+| **v2**（当前） | `server/` + `client/` + `web/` | 前后端分离架构，FastAPI REST API + SQLite 存储 + CLI + Web 前端 |
 | **v1**（保留） | `simple-todo/todo.py` | 单文件实现，纯标准库 + JSON 存储，首次启动可自动迁移到 v2 |
 
 ## 架构概览
@@ -23,10 +23,19 @@ simple-todo/
 │   ├── api.py                # API 调用封装 (urllib)
 │   ├── display.py            # 终端渲染 (中文对齐)
 │   └── menu.py               # 交互式菜单
+├── web/                       # Web 前端 (原生 JS，零依赖)
+│   ├── index.html            # 入口页面
+│   ├── css/style.css         # 样式系统
+│   └── js/
+│       ├── api.js            # HTTP 客户端 (fetch)
+│       ├── state.js          # 集中状态管理 + 发布订阅
+│       ├── app.js            # 应用控制器
+│       └── components/       # UI 组件
 ├── simple-todo/               # v1 单体版 (保留)
 │   └── todo.py               # 单文件实现
 ├── todo.command               # macOS 双击启动
 ├── todo.bat                   # Windows 双击启动
+├── start_web.sh               # Web 前端一键启动
 ├── LICENSE
 └── README.md
 ```
@@ -39,7 +48,8 @@ simple-todo/
 - ✅ **搜索功能** — 大小写不敏感的关键词搜索
 - ✅ **REST API** — 后端提供标准 HTTP 接口，可用 curl/Postman 调用
 - ✅ **前后端分离** — CLI 和 API 服务可独立运行、独立部署
-- ✅ **零依赖客户端** — 只靠 Python 标准库，复制就能用
+- ✅ **Web 前端** — 原生 JavaScript，无需 npm/build，浏览器直接使用
+- ✅ **零依赖客户端** — CLI 和 Web 前端均只靠标准库/原生 API，无需安装任何依赖
 - ✅ **SQLite 存储** — 数据库文件存储，WAL 模式支持并发，首次启动自动从 v1 JSON 迁移
 
 ## 快速开始
@@ -77,7 +87,26 @@ python -m client.cli search 报告
 python -m client.cli menu
 ```
 
-### 使用方法三：直接调用 API
+### 使用方法三：Web 前端（一键启动）
+
+```bash
+# 启动后端 API + Web 前端
+./start_web.sh
+
+# 浏览器打开 http://127.0.0.1:3000
+```
+
+或手动分别启动：
+
+```bash
+# 终端 1：启动后端
+python -m uvicorn server.main:app --host 127.0.0.1 --port 8000
+
+# 终端 2：启动 Web 前端
+python -m http.server 3000 -d web
+```
+
+### 使用方法四：直接调用 API
 
 ```bash
 # 健康检查
@@ -161,12 +190,12 @@ CREATE TABLE tasks (
 
 ## 设计原则
 
-1. **前后端分离** — 后端专注数据管理，前端专注交互体验
+1. **前后端分离** — 后端专注数据管理，前端专注交互体验（CLI + Web 双前端）
 2. **双击就能用** — 启动脚本自动管理后端生命周期
 3. **中文优先** — 原生中文支持和终端对齐
 4. **数据透明** — SQLite 单文件存储，可用任意 SQLite 客户端查看修改
 5. **API 优先** — 所有功能通过 REST API 暴露
-6. **客户端零依赖** — 只靠 Python 标准库
+6. **客户端零依赖** — CLI 只靠 Python 标准库，Web 只用原生 JS/浏览器 API
 
 ## 许可证
 
