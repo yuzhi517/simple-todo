@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, windows-latest]
+        os: [macos-13, windows-latest]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -21,7 +21,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install deps
-        run: pip install --retries 5 -r server/requirements.txt pyinstaller
+        run: pip install --default-timeout=120 --retries 10 -r server/requirements.txt pyinstaller
 
       - name: Build
         shell: bash
