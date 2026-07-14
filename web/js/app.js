@@ -257,10 +257,14 @@ function _wireCreateModal() {
         }
     });
 
-    // 用户修改分段输入框时取消灰色
+    // 用户修改分段输入框时取消灰色；聚焦时全选内容方便直接覆盖
     ['dl-year','dl-month','dl-day','dl-hour','dl-min'].forEach(id => {
         const el = document.getElementById(id);
-        if (el) el.addEventListener('input', () => _muteSegs(false));
+        if (el) {
+            el.addEventListener('input', () => _muteSegs(false));
+            el.addEventListener('focus', () => { el.dataset.prev = el.value; el.value = ''; });
+            el.addEventListener('blur', () => { if (!el.value) el.value = el.dataset.prev || ''; });
+        }
     });
 
     document.addEventListener('click', (e) => {
