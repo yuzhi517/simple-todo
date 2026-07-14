@@ -8,7 +8,6 @@
     --color-primary: #0284C7;
     --color-primary-hover: #0369A1;
     --color-primary-glow: rgba(2, 132, 199, 0.15);
-    --color-secondary: #0EA5E9;
     --color-accent: #F59E0B;
     --color-accent-glow: rgba(245, 158, 11, 0.15);
     --color-success: #10B981;
@@ -38,7 +37,6 @@
     /* ── 间距 ───────────────────────────────── */
     --radius-sm: 10px;
     --radius: 14px;
-    --radius-lg: 20px;
     --radius-xl: 24px;
     --gap: 12px;
 

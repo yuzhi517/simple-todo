@@ -10,7 +10,6 @@ import sys
 import time
 import signal
 import subprocess
-import threading
 import webbrowser
 
 
