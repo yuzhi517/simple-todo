@@ -178,18 +178,11 @@ function _openCreateModal() {
     document.getElementById('create-notes').value = '';
 
     // 默认截止日期：今天，时间：当前时间 + 1 分钟
-    const now = new Date();
-    const due = new Date(now.getTime() + 60000);
-    const dateInput = document.getElementById('create-deadline');
-    dateInput.value = due.toISOString().split('T')[0];
-    dateInput.disabled = false;
-
-    const timeInput = document.getElementById('create-deadline-time');
-    timeInput.value = String(due.getHours()).padStart(2, '0') + ':' + String(due.getMinutes()).padStart(2, '0');
-    timeInput.disabled = false;
-    timeInput.dataset.dirty = 'false';
-    timeInput.classList.add('st-input--muted');
-    timeInput.classList.remove('st-form__input--error');
+    const due = new Date(Date.now() + 60000);
+    _setSegDate('dl-year', 'dl-month', 'dl-day', due);
+    _setSegTime('dl-hour', 'dl-min', due);
+    _setSegEnabled(true);
+    _muteSegs(true);
 
     const errEl = document.getElementById('create-deadline-error');
     if (errEl) errEl.style.display = 'none';
@@ -199,6 +192,50 @@ function _openCreateModal() {
     setTimeout(() => document.getElementById('create-title').focus(), 100);
 }
 
+// ── 分段输入框辅助 ──────────────────────────────
+
+function _setSegDate(yId, mId, dId, date) {
+    document.getElementById(yId).value = date.getFullYear();
+    document.getElementById(mId).value = String(date.getMonth() + 1).padStart(2, '0');
+    document.getElementById(dId).value = String(date.getDate()).padStart(2, '0');
+}
+
+function _setSegTime(hId, mId, date) {
+    document.getElementById(hId).value = String(date.getHours()).padStart(2, '0');
+    document.getElementById(mId).value = String(date.getMinutes()).padStart(2, '0');
+}
+
+function _getSegDeadline() {
+    const y = document.getElementById('dl-year').value;
+    const mo = document.getElementById('dl-month').value;
+    const d = document.getElementById('dl-day').value;
+    const h = document.getElementById('dl-hour').value;
+    const mi = document.getElementById('dl-min').value;
+    if (!y || !mo || !d || !h || !mi) return null;
+    const date = new Date(`${y}-${mo.padStart(2,'0')}-${d.padStart(2,'0')}T${h.padStart(2,'0')}:${mi.padStart(2,'0')}:00`);
+    return isNaN(date.getTime()) ? null : date.getTime() / 1000;
+}
+
+function _setSegEnabled(enabled) {
+    ['dl-year','dl-month','dl-day','dl-hour','dl-min'].forEach(id => {
+        document.getElementById(id).disabled = !enabled;
+    });
+}
+
+function _clearSegs() {
+    ['dl-year','dl-month','dl-day','dl-hour','dl-min'].forEach(id => {
+        document.getElementById(id).value = '';
+    });
+}
+
+function _muteSegs(muted) {
+    ['dl-year','dl-month','dl-day','dl-hour','dl-min'].forEach(id => {
+        const el = document.getElementById(id);
+        if (muted) el.classList.add('st-input--muted');
+        else el.classList.remove('st-input--muted');
+    });
+}
+
 function _closeCreateModal() {
     document.getElementById('create-modal').classList.add('st-modal--hidden');
     _lockScroll(false);
@@ -206,29 +243,25 @@ function _closeCreateModal() {
 
 function _wireCreateModal() {
     const longtermCheck = document.getElementById('create-longterm');
-    const deadlineInput = document.getElementById('create-deadline');
 
     longtermCheck.addEventListener('change', () => {
-        deadlineInput.disabled = longtermCheck.checked;
-        const timeInput = document.getElementById('create-deadline-time');
-        if (timeInput) timeInput.disabled = longtermCheck.checked;
         if (longtermCheck.checked) {
-            deadlineInput.value = '';
-            timeInput.value = '';
+            _setSegEnabled(false);
+            _clearSegs();
         } else {
+            _setSegEnabled(true);
             const due = new Date(Date.now() + 60000);
-            deadlineInput.value = due.toISOString().split('T')[0];
-            timeInput.value = String(due.getHours()).padStart(2, '0') + ':' + String(due.getMinutes()).padStart(2, '0');
-            timeInput.classList.add('st-input--muted');
+            _setSegDate('dl-year', 'dl-month', 'dl-day', due);
+            _setSegTime('dl-hour', 'dl-min', due);
+            _muteSegs(true);
         }
     });
 
-    const timeInput = document.getElementById('create-deadline-time');
-    if (timeInput) {
-        timeInput.addEventListener('change', () => {
-            timeInput.classList.remove('st-input--muted');
-        });
-    }
+    // 用户修改分段输入框时取消灰色
+    ['dl-year','dl-month','dl-day','dl-hour','dl-min'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', () => _muteSegs(false));
+    });
 
     document.addEventListener('click', (e) => {
         if (e.target.dataset.action === 'create-close') _closeCreateModal();
@@ -259,19 +292,17 @@ async function _submitCreate() {
     }
 
     let deadline = null;
-    const longterm = document.getElementById('create-longterm').checked;
-    const dateVal = document.getElementById('create-deadline').value;
-
-    if (!longterm && dateVal) {
-        const timeVal = document.getElementById('create-deadline-time').value || '00:00';
-        const d = new Date(dateVal + 'T' + timeVal + ':00');
-        const dl = d.getTime() / 1000;
-
+    if (!document.getElementById('create-longterm').checked) {
+        const dl = _getSegDeadline();
+        if (dl === null) {
+            document.getElementById('dl-year').focus();
+            return;
+        }
         // 截止时间必须比当前时间晚至少 1 分钟
         if (dl <= Date.now() / 1000 + 60) {
-            const timeInput = document.getElementById('create-deadline-time');
-            timeInput.classList.add('st-form__input--error');
-            timeInput.focus();
+            document.getElementById('dl-hour').classList.add('st-form__input--error');
+            document.getElementById('dl-min').classList.add('st-form__input--error');
+            document.getElementById('dl-hour').focus();
             const errEl = document.getElementById('create-deadline-error');
             if (errEl) { errEl.textContent = '请选择当前时间之后的时间'; errEl.style.display = ''; }
             return;

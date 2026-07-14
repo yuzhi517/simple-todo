@@ -581,30 +581,36 @@ body::before {
 .st-modal__body { padding: 18px 24px; display: flex; flex-direction: column; gap: 10px; }
 .st-create-row { display: flex; gap: 10px; align-items: center; }
 
-.st-create-row input[type="date"],
-.st-create-row input[type="time"] {
-    flex: 1; max-width: 160px;
-    padding: 12px 14px;
-    font-size: 14px; font-family: var(--font);
+/* ── 分段数字输入框 ──────────────────────── */
+
+.st-seg-group { display: flex; align-items: center; gap: 2px; }
+.st-seg-sep   { font-size: 13px; color: var(--color-text-muted); flex-shrink: 0; user-select: none; }
+
+.st-seg {
+    width: 34px; height: 30px;
+    padding: 0; text-align: center;
+    font-size: 13px; font-family: var(--font-mono); font-weight: 500;
     border: 1px solid var(--glass-border);
-    border-radius: var(--radius-sm);
+    border-radius: 8px;
     background: var(--glass-bg);
     backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
     -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
     color: var(--color-text);
-    outline: none; cursor: pointer;
+    outline: none;
+    -moz-appearance: textfield;
     transition: all 0.2s ease;
-    color-scheme: light;
 }
-.st-create-row input[type="date"]:focus,
-.st-create-row input[type="time"]:focus {
-    border-color: rgba(2, 132, 199, 0.35);
+.st-seg::-webkit-inner-spin-button,
+.st-seg::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.st-seg::placeholder { color: var(--color-text-muted); }
+.st-seg:focus {
+    border-color: rgba(2, 132, 199, 0.45);
     box-shadow: 0 0 0 3px var(--color-primary-glow);
+    background: var(--glass-bg-active);
 }
-.st-create-row input[type="date"]:disabled,
-.st-create-row input[type="time"]:disabled { opacity: 0.3; cursor: not-allowed; }
-
-.st-create-row input.st-input--muted { color: var(--color-text-muted); }
+.st-seg:disabled { opacity: 0.3; cursor: not-allowed; }
+.st-seg.st-input--muted { color: var(--color-text-muted); }
+.st-seg.st-form__input--error { border-color: var(--color-danger); box-shadow: 0 0 0 3px var(--color-danger-glow); }
 
 .st-create-error {
     font-size: 11px; color: var(--color-danger);

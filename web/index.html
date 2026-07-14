@@ -38,8 +38,18 @@
                 <input type="text" id="create-title" class="st-form__input"
                        placeholder="任务标题" maxlength="500" autocomplete="off">
                 <div class="st-create-row">
-                    <input type="date" id="create-deadline">
-                    <input type="time" id="create-deadline-time">
+                    <span class="st-seg-group" id="create-deadline-group">
+                        <input type="number" class="st-seg" id="dl-year" placeholder="年" min="2024" max="2099">
+                        <span class="st-seg-sep">-</span>
+                        <input type="number" class="st-seg" id="dl-month" placeholder="月" min="1" max="12">
+                        <span class="st-seg-sep">-</span>
+                        <input type="number" class="st-seg" id="dl-day" placeholder="日" min="1" max="31">
+                    </span>
+                    <span class="st-seg-group" id="create-deadline-time-group">
+                        <input type="number" class="st-seg" id="dl-hour" placeholder="时" min="0" max="23">
+                        <span class="st-seg-sep">:</span>
+                        <input type="number" class="st-seg" id="dl-min" placeholder="分" min="0" max="59">
+                    </span>
                     <span class="st-create-error" id="create-deadline-error" style="display:none;"></span>
                     <label class="st-form__check">
                         <input type="checkbox" id="create-longterm"> 长期
