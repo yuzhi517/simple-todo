@@ -35,7 +35,8 @@ simple-todo/
 │   └── todo.py               # 单文件实现
 ├── todo.command               # macOS 双击启动
 ├── todo.bat                   # Windows 双击启动
-├── start_web.sh               # Web 前端一键启动
+├── start_web.sh               # Web 前端一键启动 (macOS/Linux)
+├── start_web.bat              # Web 前端一键启动 (Windows) (fix: 修复 Mac → Windows 跨平台兼容性问题)
 ├── LICENSE
 └── README.md
 ```
@@ -70,16 +71,15 @@ pip install -r requirements.txt
 
 直接双击启动脚本：
 - **macOS** → 双击 [todo.command](todo.command)
-- **Windows** → 双击 [todo.bat](todo.bat)
+- **Windows** → 双击 [todo.bat](simple-todo/todo.bat)
 
 ### 使用方法二：手动启动
 
 ```bash
-# 终端 1：启动后端服务
-cd server
-python -m uvicorn main:app --host 127.0.0.1 --port 8000
+# 终端 1：启动后端服务（在项目根目录执行）
+python -m uvicorn server.main:app --host 127.0.0.1 --port 8000
 
-# 终端 2：使用 CLI
+# 终端 2：使用 CLI（在项目根目录执行）
 python -m client.cli add "完成中期报告" -p 1
 python -m client.cli
 python -m client.cli done 1
@@ -87,22 +87,22 @@ python -m client.cli search 报告
 python -m client.cli menu
 ```
 
+> **Windows 用户提示**：如果 CLI 出现乱码或 `UnicodeEncodeError`，请在运行前执行 `set PYTHONIOENCODING=utf-8`，或直接使用 `todo.bat` 双击运行。
+
 ### 使用方法三：Web 前端（一键启动）
 
-```bash
-# 启动后端 API + Web 前端
-./start_web.sh
+- **Windows** → 双击 [start_web.bat](start_web.bat)
+- **macOS / Linux** → 终端执行 `./start_web.sh`
 
-# 浏览器打开 http://127.0.0.1:3000
-```
+然后浏览器打开 http://127.0.0.1:3000
 
 或手动分别启动：
 
 ```bash
-# 终端 1：启动后端
+# 终端 1：启动后端（在项目根目录执行）
 python -m uvicorn server.main:app --host 127.0.0.1 --port 8000
 
-# 终端 2：启动 Web 前端
+# 终端 2：启动 Web 前端（在项目根目录执行）
 python -m http.server 3000 -d web
 ```
 

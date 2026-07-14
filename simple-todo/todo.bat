@@ -1,10 +1,9 @@
 @echo off
 cd /d "%~dp0.."
+set PYTHONIOENCODING=utf-8
 
 echo 正在启动后端服务...
-cd server
-start /B python -m uvicorn main:app --host 127.0.0.1 --port 8000
-cd ..
+start /B python -m uvicorn server.main:app --host 127.0.0.1 --port 8000 (fix: 修复 Mac → Windows 跨平台兼容性问题)
 
 echo 等待后端服务就绪...
 timeout /t 3 /nobreak > nul

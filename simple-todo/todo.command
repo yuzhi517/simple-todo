@@ -4,10 +4,8 @@ cd "$SCRIPT_DIR"
 
 # 启动后端服务（后台运行）
 echo "正在启动后端服务..."
-cd server
-python3 -m uvicorn main:app --host 127.0.0.1 --port 8000 &
-SERVER_PID=$!
-cd "$SCRIPT_DIR"
+python3 -m uvicorn server.main:app --host 127.0.0.1 --port 8000 &
+SERVER_PID=$! (fix: 修复 Mac → Windows 跨平台兼容性问题)
 
 # 等待后端就绪
 echo "等待后端服务就绪..."
