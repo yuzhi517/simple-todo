@@ -87,7 +87,7 @@ def run_menu():
                 try:
                     result = TodoAPI.delete_task(int(tid))
                     if result:
-                        print(f'✓ 编号为 [{result["id"]}] 的任务已经被删掉了: {result["title"]}') (fix: 修复 Mac → Windows 跨平台兼容性问题)
+                        print(f'✓ 编号为 [{result["id"]}] 的任务已经被删掉了: {result["title"]}')
                 except ValueError:
                     print(f'出错了: 你给的任务编号 "{tid}" 是不对的')
         elif choice == '5':

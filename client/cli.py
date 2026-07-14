@@ -137,7 +137,7 @@ def main():
 
         result = TodoAPI.delete_task(task_id)
         if result:
-            print(f'✓ 编号为 [{result["id"]}] 的任务已经被删掉了: {result["title"]}') (fix: 修复 Mac → Windows 跨平台兼容性问题)
+            print(f'✓ 编号为 [{result["id"]}] 的任务已经被删掉了: {result["title"]}')
 
     elif command == 'search':
         if len(args) < 2:

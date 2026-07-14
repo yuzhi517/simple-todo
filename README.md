@@ -36,7 +36,7 @@ simple-todo/
 ├── todo.command               # macOS 双击启动
 ├── todo.bat                   # Windows 双击启动
 ├── start_web.sh               # Web 前端一键启动 (macOS/Linux)
-├── start_web.bat              # Web 前端一键启动 (Windows) (fix: 修复 Mac → Windows 跨平台兼容性问题)
+├── start_web.bat              # Web 前端一键启动 (Windows)
 ├── LICENSE
 └── README.md
 ```
