@@ -8,6 +8,7 @@ on:
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
         os: [macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
@@ -20,9 +21,10 @@ jobs:
           python-version: '3.11'
 
       - name: Install deps
-        run: pip install -r server/requirements.txt pyinstaller
+        run: pip install --retries 5 -r server/requirements.txt pyinstaller
 
       - name: Build
+        shell: bash
         run: |
           if [ "${{ matrix.os }}" = "windows-latest" ]; then
             pyinstaller --onefile --name "SimpleTodo" --add-data "web;web" --add-data "server;server" run.py
@@ -31,7 +33,6 @@ jobs:
             pyinstaller --onefile --name "SimpleTodo" --add-data "web:web" --add-data "server:server" run.py
             echo "ASSET=dist/SimpleTodo" >> $GITHUB_ENV
           fi
-        shell: bash
 
       - name: Upload to Release
         uses: softprops/action-gh-release@v1
