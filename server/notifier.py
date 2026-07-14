@@ -44,19 +44,20 @@ def notify(title: str, body: str):
                 f'display notification "{body}" with title "{title}" sound name "Glass"'
             ])
         elif system == "Windows":
-            # PowerShell Toast 通知
             ps = (
                 f'[Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications,'
-                f'ContentType = WindowsRuntime] > $null;'
+                f'ContentType = WindowsRuntime] | Out-Null;'
+                f'$AppId = "SimpleTodo.TaskReminder";'
                 f'$template = [Windows.UI.Notifications.ToastNotificationManager]::'
                 f'GetTemplateContent([Windows.UI.Notifications.ToastTemplateType]::ToastText02);'
                 f'$template.SelectSingleNode("//text[@id=1]").InnerText = "{title}";'
                 f'$template.SelectSingleNode("//text[@id=2]").InnerText = "{body}";'
                 f'$toast = [Windows.UI.Notifications.ToastNotification]::new($template);'
-                f'[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier'
-                f'("Simple Todo").Show($toast);'
+                f'$notifier = [Windows.UI.Notifications.ToastNotificationManager]::'
+                f'CreateToastNotifier($AppId);'
+                f'$notifier.Show($toast);'
             )
-            subprocess.run(["powershell", "-Command", ps], capture_output=True)
+            subprocess.run(["powershell", "-WindowStyle", "Hidden", "-Command", ps], capture_output=True)
         else:
             print(f"[notifier] {title}: {body}")
     except Exception as e:
