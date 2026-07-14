@@ -192,7 +192,7 @@ function wireEvents() {
         const { id } = e.detail;
         state.setLoading(true);
         const result = await api.markDone(id);
-        if (result.ok) { state.updateTask(result.data); state.clearError(); }
+        if (result.ok) { await loadTasks(); state.clearError(); }
         else { state.setError(result.error); }
         state.setLoading(false);
     });
@@ -201,7 +201,7 @@ function wireEvents() {
         const { id } = e.detail;
         state.setLoading(true);
         const result = await api.markUndone(id);
-        if (result.ok) { state.updateTask(result.data); state.clearError(); }
+        if (result.ok) { await loadTasks(); state.clearError(); }
         else { state.setError(result.error); }
         state.setLoading(false);
     });
@@ -218,7 +218,10 @@ function wireEvents() {
         const task = state.getState().allTasks.find(t => t.id === id);
         const newFocus = task ? !task.focus : true;
         const result = await api.updateFocus(id, newFocus);
-        if (result.ok) { state.updateTask(result.data); state.clearError(); }
+        if (result.ok) {
+            await loadTasks();  // 重新加载以应用排序
+            state.clearError();
+        }
         else { state.setError(result.error); }
         state.setLoading(false);
     });

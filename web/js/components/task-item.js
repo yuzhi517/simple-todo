@@ -40,7 +40,9 @@ export function renderTaskItem(task, { showManage = false } = {}) {
     const deadlineLabel = formatDeadline(task.deadline);
     const deadlineClass = isExpired(task.deadline, task.done) ? ' st-task__deadline--expired' : '';
 
-    const focusStar = task.focus ? '<span class="st-task__focus-star" title="聚焦任务">◆</span>' : '';
+    const focusStar = task.focus
+        ? '<span class="st-task__focus-star" data-action="focus-toggle" title="取消聚焦">◆</span>'
+        : '<span class="st-task__focus-star st-task__focus-star--off" data-action="focus-toggle" title="设为聚焦">◇</span>';
 
     const mainAction = task.done
         ? '<button class="st-task__btn st-task__btn--undone" data-action="undone">恢复</button>'
