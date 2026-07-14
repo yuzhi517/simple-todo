@@ -83,11 +83,11 @@ def check_deadlines():
                     break
                 _notified.add(key)
 
-                if seconds < HOUR:
+                if remaining < HOUR:
                     mins = max(1, int(remaining // MINUTE))
                     title = f"{emoji} {label} — Simple Todo"
                     body = f"「{task['title']}」将在 {mins} 分钟后截止"
-                elif seconds < DAY:
+                elif remaining < DAY:
                     hrs = int(remaining // HOUR) + 1
                     title = f"{emoji} {label} — Simple Todo"
                     body = f"「{task['title']}」将在约 {hrs} 小时后截止"

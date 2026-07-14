@@ -92,10 +92,10 @@ function _checkDeadlines(tasks) {
                 _notifiedTasks.add(key);
 
                 let body;
-                if (cp.seconds < HOUR) {
-                    const mins = Math.ceil(remaining / MINUTE);
+                if (remaining < HOUR) {
+                    const mins = Math.max(1, Math.ceil(remaining / MINUTE));
                     body = `"${task.title}" 将在 ${mins} 分钟后截止`;
-                } else if (cp.seconds < DAY) {
+                } else if (remaining < DAY) {
                     const hrs = Math.ceil(remaining / HOUR);
                     body = `"${task.title}" 将在约 ${hrs} 小时后截止`;
                 } else {
