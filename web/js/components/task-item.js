@@ -14,7 +14,7 @@ function formatDeadline(ts) {
     if (!ts) return '长期';
     const d = new Date(ts * 1000);
     const pad = (n) => String(n).padStart(2, '0');
-    return `${pad(d.getMonth() + 1)}-${pad(d.getDate())} 截止`;
+    return `${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())} 截止`;
 }
 
 function isExpired(ts, done) {

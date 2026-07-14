@@ -32,6 +32,69 @@ async function boot() {
 
     wireEvents();
     _wireCreateModal();
+    _initNotifications();
+}
+
+// ── 截止日期通知 ──────────────────────────────────────
+
+let _notifiedTasks = new Set();
+
+function _initNotifications() {
+    if (!('Notification' in window)) return;
+
+    if (Notification.permission === 'default') {
+        Notification.requestPermission();
+    }
+
+    // 首次检查
+    _checkDeadlines(state.getState().allTasks);
+
+    // 每 5 分钟检查一次
+    setInterval(() => {
+        _checkDeadlines(state.getState().allTasks);
+    }, 5 * 60 * 1000);
+
+    // 任务更新后也检查
+    state.on('change', (s) => {
+        if (s.allTasks.length > 0) _checkDeadlines(s.allTasks);
+    });
+}
+
+function _checkDeadlines(tasks) {
+    if (Notification.permission !== 'granted') return;
+
+    const now = Math.floor(Date.now() / 1000);
+    const ONE_HOUR = 3600;
+    const ONE_DAY = 86400;
+
+    for (const task of tasks) {
+        if (!task.deadline || task.done) continue;
+
+        const remaining = task.deadline - now;
+        if (remaining < 0 || remaining > ONE_DAY) continue;
+
+        // 同一任务一天内不重复通知
+        const key = `${task.id}-${Math.floor(remaining / ONE_HOUR)}h`;
+        if (_notifiedTasks.has(key)) continue;
+        _notifiedTasks.add(key);
+
+        let urgency, body;
+        if (remaining < ONE_HOUR) {
+            urgency = '⚠️ 即将到期';
+            body = `"${task.title}" 将在 ${Math.ceil(remaining / 60)} 分钟后截止`;
+        } else {
+            const hours = Math.ceil(remaining / ONE_HOUR);
+            urgency = '⏰ 临近截止';
+            body = `"${task.title}" 将在约 ${hours} 小时后截止`;
+        }
+
+        new Notification(`${urgency} — Simple Todo`, {
+            body,
+            icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🔔</text></svg>',
+            tag: `todo-${task.id}`,
+            requireInteraction: remaining < ONE_HOUR,
+        });
+    }
 }
 
 async function loadTasks() {
@@ -110,11 +173,27 @@ function _refreshStatusBar(s) {
 
 function _openCreateModal() {
     document.getElementById('create-title').value = '';
-    document.getElementById('create-deadline').value = '';
-    document.getElementById('create-deadline').disabled = false;
     document.getElementById('create-longterm').checked = false;
     document.getElementById('create-focus').checked = false;
     document.getElementById('create-notes').value = '';
+
+    // 默认截止日期：今天，时间：当前时间 + 1 分钟
+    const now = new Date();
+    const due = new Date(now.getTime() + 60000);
+    const dateInput = document.getElementById('create-deadline');
+    dateInput.value = due.toISOString().split('T')[0];
+    dateInput.disabled = false;
+
+    const timeInput = document.getElementById('create-deadline-time');
+    timeInput.value = String(due.getHours()).padStart(2, '0') + ':' + String(due.getMinutes()).padStart(2, '0');
+    timeInput.disabled = false;
+    timeInput.dataset.dirty = 'false';
+    timeInput.classList.add('st-input--muted');
+    timeInput.classList.remove('st-form__input--error');
+
+    const errEl = document.getElementById('create-deadline-error');
+    if (errEl) errEl.style.display = 'none';
+
     document.getElementById('create-modal').classList.remove('st-modal--hidden');
     _lockScroll(true);
     setTimeout(() => document.getElementById('create-title').focus(), 100);
@@ -131,8 +210,25 @@ function _wireCreateModal() {
 
     longtermCheck.addEventListener('change', () => {
         deadlineInput.disabled = longtermCheck.checked;
-        if (longtermCheck.checked) deadlineInput.value = '';
+        const timeInput = document.getElementById('create-deadline-time');
+        if (timeInput) timeInput.disabled = longtermCheck.checked;
+        if (longtermCheck.checked) {
+            deadlineInput.value = '';
+            timeInput.value = '';
+        } else {
+            const due = new Date(Date.now() + 60000);
+            deadlineInput.value = due.toISOString().split('T')[0];
+            timeInput.value = String(due.getHours()).padStart(2, '0') + ':' + String(due.getMinutes()).padStart(2, '0');
+            timeInput.classList.add('st-input--muted');
+        }
     });
+
+    const timeInput = document.getElementById('create-deadline-time');
+    if (timeInput) {
+        timeInput.addEventListener('change', () => {
+            timeInput.classList.remove('st-input--muted');
+        });
+    }
 
     document.addEventListener('click', (e) => {
         if (e.target.dataset.action === 'create-close') _closeCreateModal();
@@ -163,9 +259,24 @@ async function _submitCreate() {
     }
 
     let deadline = null;
-    if (!document.getElementById('create-longterm').checked && document.getElementById('create-deadline').value) {
-        const d = new Date(document.getElementById('create-deadline').value + 'T23:59:59');
-        deadline = d.getTime() / 1000;
+    const longterm = document.getElementById('create-longterm').checked;
+    const dateVal = document.getElementById('create-deadline').value;
+
+    if (!longterm && dateVal) {
+        const timeVal = document.getElementById('create-deadline-time').value || '00:00';
+        const d = new Date(dateVal + 'T' + timeVal + ':00');
+        const dl = d.getTime() / 1000;
+
+        // 截止时间必须比当前时间晚至少 1 分钟
+        if (dl <= Date.now() / 1000 + 60) {
+            const timeInput = document.getElementById('create-deadline-time');
+            timeInput.classList.add('st-form__input--error');
+            timeInput.focus();
+            const errEl = document.getElementById('create-deadline-error');
+            if (errEl) { errEl.textContent = '请选择当前时间之后的时间'; errEl.style.display = ''; }
+            return;
+        }
+        deadline = dl;
     }
 
     const focus = document.getElementById('create-focus').checked;

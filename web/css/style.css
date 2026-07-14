@@ -581,6 +581,36 @@ body::before {
 .st-modal__body { padding: 18px 24px; display: flex; flex-direction: column; gap: 10px; }
 .st-create-row { display: flex; gap: 10px; align-items: center; }
 
+.st-create-row input[type="date"],
+.st-create-row input[type="time"] {
+    flex: 1; max-width: 160px;
+    padding: 12px 14px;
+    font-size: 14px; font-family: var(--font);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm);
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    color: var(--color-text);
+    outline: none; cursor: pointer;
+    transition: all 0.2s ease;
+    color-scheme: light;
+}
+.st-create-row input[type="date"]:focus,
+.st-create-row input[type="time"]:focus {
+    border-color: rgba(2, 132, 199, 0.35);
+    box-shadow: 0 0 0 3px var(--color-primary-glow);
+}
+.st-create-row input[type="date"]:disabled,
+.st-create-row input[type="time"]:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.st-create-row input.st-input--muted { color: var(--color-text-muted); }
+
+.st-create-error {
+    font-size: 11px; color: var(--color-danger);
+    white-space: nowrap; flex-shrink: 0;
+}
+
 .st-modal__textarea {
     display: block; width: 100%; min-height: 160px;
     padding: 12px 14px; font-size: 14px; font-family: var(--font);

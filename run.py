@@ -33,8 +33,15 @@ def main():
         stderr=subprocess.DEVNULL,
     )
 
+    # 启动通知服务（后台检查截止日期）
+    notifier = subprocess.Popen(
+        [sys.executable, "server/notifier.py"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+    )
+
     def cleanup():
-        for p in [backend, web]:
+        for p in [backend, web, notifier]:
             try:
                 p.terminate()
                 p.wait(timeout=3)
