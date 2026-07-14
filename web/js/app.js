@@ -91,19 +91,22 @@ function _checkDeadlines(tasks) {
                 if (_notifiedTasks.has(key)) break;
                 _notifiedTasks.add(key);
 
-                let body;
+                let title, body;
                 if (remaining < HOUR) {
                     const mins = Math.max(1, Math.ceil(remaining / MINUTE));
+                    title = `🚨 ${mins} 分钟后截止 — Simple Todo`;
                     body = `"${task.title}" 将在 ${mins} 分钟后截止`;
                 } else if (remaining < DAY) {
                     const hrs = Math.ceil(remaining / HOUR);
+                    title = `⏰ ${hrs} 小时后截止 — Simple Todo`;
                     body = `"${task.title}" 将在约 ${hrs} 小时后截止`;
                 } else {
                     const days = Math.ceil(remaining / DAY);
+                    title = `📅 ${days} 天后截止 — Simple Todo`;
                     body = `"${task.title}" 将在 ${days} 天后截止`;
                 }
 
-                new Notification(`${cp.urgency} ${cp.label} — Simple Todo`, {
+                new Notification(title, {
                     body,
                     tag: `todo-${task.id}-${cp.seconds}`,
                     requireInteraction: cp.seconds <= HOUR,

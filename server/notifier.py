@@ -18,12 +18,12 @@ DAY = 86400
 
 # 提醒节点：5分钟、1小时、12小时、1天、3天、7天
 CHECKPOINTS = [
-    (5 * MINUTE,  '5 分钟后截止', '🚨'),
-    (1 * HOUR,    '1 小时后截止', '⚠️'),
-    (12 * HOUR,   '12 小时后截止', '⏰'),
-    (1 * DAY,     '1 天后截止',   '📅'),
-    (3 * DAY,     '3 天后截止',   '📅'),
-    (7 * DAY,     '7 天后截止',   '📅'),
+    5 * MINUTE,
+    1 * HOUR,
+    12 * HOUR,
+    1 * DAY,
+    3 * DAY,
+    7 * DAY,
 ]
 
 _notified = set()  # 防重复通知 (task_id, checkpoint_seconds)
@@ -76,7 +76,7 @@ def check_deadlines():
         if remaining < 0 or remaining > 7 * DAY:
             continue
 
-        for seconds, label, emoji in CHECKPOINTS:
+        for seconds in CHECKPOINTS:
             if remaining <= seconds:
                 key = f"{task['id']}-{seconds}"
                 if key in _notified:
@@ -85,15 +85,15 @@ def check_deadlines():
 
                 if remaining < HOUR:
                     mins = max(1, int(remaining // MINUTE))
-                    title = f"{emoji} {label} — Simple Todo"
+                    title = f"🚨 {mins} 分钟后截止 — Simple Todo"
                     body = f"「{task['title']}」将在 {mins} 分钟后截止"
                 elif remaining < DAY:
                     hrs = int(remaining // HOUR) + 1
-                    title = f"{emoji} {label} — Simple Todo"
+                    title = f"⏰ {hrs} 小时后截止 — Simple Todo"
                     body = f"「{task['title']}」将在约 {hrs} 小时后截止"
                 else:
                     days = int(remaining // DAY) + 1
-                    title = f"{emoji} {label} — Simple Todo"
+                    title = f"📅 {days} 天后截止 — Simple Todo"
                     body = f"「{task['title']}」将在 {days} 天后截止"
 
                 print(f"[{datetime.now():%H:%M:%S}] {title}: {body}")
