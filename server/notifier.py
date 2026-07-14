@@ -12,10 +12,21 @@ from datetime import datetime
 
 DB_PATH = os.path.expanduser("~/.simple_todo/tasks.db")
 CHECK_INTERVAL = 5 * 60  # 5 分钟
-ONE_HOUR = 3600
-ONE_DAY = 86400
+MINUTE = 60
+HOUR = 3600
+DAY = 86400
 
-_notified = set()  # 防重复通知 (task_id, hour_bucket)
+# 提醒节点：5分钟、1小时、12小时、1天、3天、7天
+CHECKPOINTS = [
+    (5 * MINUTE,  '5 分钟后截止', '🚨'),
+    (1 * HOUR,    '1 小时后截止', '⚠️'),
+    (12 * HOUR,   '12 小时后截止', '⏰'),
+    (1 * DAY,     '1 天后截止',   '📅'),
+    (3 * DAY,     '3 天后截止',   '📅'),
+    (7 * DAY,     '7 天后截止',   '📅'),
+]
+
+_notified = set()  # 防重复通知 (task_id, checkpoint_seconds)
 
 
 def get_db():
@@ -62,26 +73,32 @@ def check_deadlines():
 
     for task in tasks:
         remaining = task["deadline"] - now
-        if remaining < 0 or remaining > ONE_DAY:
+        if remaining < 0 or remaining > 7 * DAY:
             continue
 
-        hours_left = int(remaining // 3600)
-        key = f"{task['id']}-{hours_left}h"
+        for seconds, label, emoji in CHECKPOINTS:
+            if remaining <= seconds:
+                key = f"{task['id']}-{seconds}"
+                if key in _notified:
+                    break
+                _notified.add(key)
 
-        if key in _notified:
-            continue
-        _notified.add(key)
+                if seconds < HOUR:
+                    mins = max(1, int(remaining // MINUTE))
+                    title = f"{emoji} {label} — Simple Todo"
+                    body = f"「{task['title']}」将在 {mins} 分钟后截止"
+                elif seconds < DAY:
+                    hrs = int(remaining // HOUR) + 1
+                    title = f"{emoji} {label} — Simple Todo"
+                    body = f"「{task['title']}」将在约 {hrs} 小时后截止"
+                else:
+                    days = int(remaining // DAY) + 1
+                    title = f"{emoji} {label} — Simple Todo"
+                    body = f"「{task['title']}」将在 {days} 天后截止"
 
-        if remaining < ONE_HOUR:
-            mins = max(1, int(remaining // 60))
-            title = "⚠️ 即将到期 — Simple Todo"
-            body = f"「{task['title']}」将在 {mins} 分钟后截止"
-        else:
-            title = "⏰ 临近截止 — Simple Todo"
-            body = f"「{task['title']}」将在约 {hours_left} 小时后截止"
-
-        print(f"[{datetime.now():%H:%M:%S}] {title}: {body}")
-        notify(title, body)
+                print(f"[{datetime.now():%H:%M:%S}] {title}: {body}")
+                notify(title, body)
+                break
 
     conn.close()
 

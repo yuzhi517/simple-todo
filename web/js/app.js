@@ -64,36 +64,53 @@ function _checkDeadlines(tasks) {
     if (Notification.permission !== 'granted') return;
 
     const now = Math.floor(Date.now() / 1000);
-    const ONE_HOUR = 3600;
-    const ONE_DAY = 86400;
+    const MINUTE = 60;
+    const HOUR = 3600;
+    const DAY = 86400;
+
+    // 提醒节点：5分钟、1小时、12小时、1天、3天、7天
+    const checkpoints = [
+        { seconds: 5 * MINUTE,   label: '5 分钟后截止', urgency: '🚨' },
+        { seconds: 1 * HOUR,     label: '1 小时后截止', urgency: '⚠️' },
+        { seconds: 12 * HOUR,    label: '12 小时后截止', urgency: '⏰' },
+        { seconds: 1 * DAY,      label: '1 天后截止',    urgency: '📅' },
+        { seconds: 3 * DAY,      label: '3 天后截止',    urgency: '📅' },
+        { seconds: 7 * DAY,      label: '7 天后截止',    urgency: '📅' },
+    ];
 
     for (const task of tasks) {
         if (!task.deadline || task.done) continue;
 
         const remaining = task.deadline - now;
-        if (remaining < 0 || remaining > ONE_DAY) continue;
+        if (remaining < 0 || remaining > 7 * DAY) continue;
 
-        // 同一任务一天内不重复通知
-        const key = `${task.id}-${Math.floor(remaining / ONE_HOUR)}h`;
-        if (_notifiedTasks.has(key)) continue;
-        _notifiedTasks.add(key);
+        for (const cp of checkpoints) {
+            // 找到第一个还没过的提醒节点
+            if (remaining <= cp.seconds) {
+                const key = `${task.id}-${cp.seconds}`;
+                if (_notifiedTasks.has(key)) break;
+                _notifiedTasks.add(key);
 
-        let urgency, body;
-        if (remaining < ONE_HOUR) {
-            urgency = '⚠️ 即将到期';
-            body = `"${task.title}" 将在 ${Math.ceil(remaining / 60)} 分钟后截止`;
-        } else {
-            const hours = Math.ceil(remaining / ONE_HOUR);
-            urgency = '⏰ 临近截止';
-            body = `"${task.title}" 将在约 ${hours} 小时后截止`;
+                let body;
+                if (cp.seconds < HOUR) {
+                    const mins = Math.ceil(remaining / MINUTE);
+                    body = `"${task.title}" 将在 ${mins} 分钟后截止`;
+                } else if (cp.seconds < DAY) {
+                    const hrs = Math.ceil(remaining / HOUR);
+                    body = `"${task.title}" 将在约 ${hrs} 小时后截止`;
+                } else {
+                    const days = Math.ceil(remaining / DAY);
+                    body = `"${task.title}" 将在 ${days} 天后截止`;
+                }
+
+                new Notification(`${cp.urgency} ${cp.label} — Simple Todo`, {
+                    body,
+                    tag: `todo-${task.id}-${cp.seconds}`,
+                    requireInteraction: cp.seconds <= HOUR,
+                });
+                break;
+            }
         }
-
-        new Notification(`${urgency} — Simple Todo`, {
-            body,
-            icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🔔</text></svg>',
-            tag: `todo-${task.id}`,
-            requireInteraction: remaining < ONE_HOUR,
-        });
     }
 }
 
