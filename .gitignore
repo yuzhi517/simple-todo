@@ -3,3 +3,6 @@ __pycache__/
 gen_ppt.py
 中期汇报.pptx
 .DS_Store
+dist/
+build/
+*.spec
