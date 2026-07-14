@@ -6,8 +6,8 @@
 //           focus-toggle, view-toggle, search-clear
 // ==========================================
 
-import * as state from '../state.js';
-import { renderTaskItem } from './task-item.js';
+import * as state from '../state.js?v=4';
+import { renderTaskItem } from './task-item.js?v=4';
 
 let _listContainer = null;
 

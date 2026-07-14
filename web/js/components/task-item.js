@@ -10,8 +10,9 @@ function formatDate(ts) {
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
-function formatDeadline(ts) {
+function formatDeadline(ts, done) {
     if (!ts) return '长期';
+    if (ts < Date.now() / 1000 && !done) return '已截止';
     const d = new Date(ts * 1000);
     const pad = (n) => String(n).padStart(2, '0');
     return `${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())} 截止`;
@@ -20,6 +21,12 @@ function formatDeadline(ts) {
 function isExpired(ts, done) {
     if (!ts || done) return false;
     return ts < Date.now() / 1000;
+}
+
+function isUrgent(ts, done) {
+    if (!ts || done) return false;
+    const remaining = ts - Date.now() / 1000;
+    return remaining > 0 && remaining <= 3600;  // 1 小时内截止
 }
 
 function escapeHtml(str) {
@@ -37,8 +44,13 @@ export function renderTaskItem(task, { showManage = false } = {}) {
         ? `完成于 ${formatDate(task.done_at)}`
         : `创建于 ${formatDate(task.created_at)}`;
 
-    const deadlineLabel = formatDeadline(task.deadline);
-    const deadlineClass = isExpired(task.deadline, task.done) ? ' st-task__deadline--expired' : '';
+    const deadlineLabel = formatDeadline(task.deadline, task.done);
+    let deadlineClass = '';
+    if (isExpired(task.deadline, task.done)) {
+        deadlineClass = ' st-task__deadline--expired';
+    } else if (isUrgent(task.deadline, task.done)) {
+        deadlineClass = ' st-task__deadline--urgent';
+    }
 
     const focusStar = task.focus
         ? '<span class="st-task__focus-star" data-action="focus-toggle" title="取消聚焦">◆</span>'

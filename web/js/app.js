@@ -3,11 +3,11 @@
 // 工具栏：搜索（面板展开）+ 添加（弹窗创建）
 // ==========================================
 
-import * as api from './api.js';
-import * as state from './state.js';
-import { renderStatusBar } from './components/status-bar.js';
-import { renderSearchBar, focusSearchInput } from './components/search-bar.js';
-import { renderTaskList } from './components/task-list.js';
+import * as api from './api.js?v=4';
+import * as state from './state.js?v=4';
+import { renderStatusBar } from './components/status-bar.js?v=4';
+import { renderSearchBar, focusSearchInput } from './components/search-bar.js?v=4';
+import { renderTaskList } from './components/task-list.js?v=4';
 
 async function boot() {
     const health = await api.healthCheck();
@@ -32,89 +32,6 @@ async function boot() {
 
     wireEvents();
     _wireCreateModal();
-    _initNotifications();
-}
-
-// ── 截止日期通知 ──────────────────────────────────────
-
-let _notifiedTasks = new Set();
-
-function _initNotifications() {
-    if (!('Notification' in window)) return;
-
-    if (Notification.permission === 'default') {
-        Notification.requestPermission();
-    }
-
-    // 首次检查
-    _checkDeadlines(state.getState().allTasks);
-
-    // 每 5 分钟检查一次
-    setInterval(() => {
-        _checkDeadlines(state.getState().allTasks);
-    }, 5 * 60 * 1000);
-
-    // 任务更新后也检查
-    state.on('change', (s) => {
-        if (s.allTasks.length > 0) _checkDeadlines(s.allTasks);
-    });
-}
-
-function _checkDeadlines(tasks) {
-    if (Notification.permission !== 'granted') return;
-
-    const now = Math.floor(Date.now() / 1000);
-    const MINUTE = 60;
-    const HOUR = 3600;
-    const DAY = 86400;
-
-    // 提醒节点：5分钟、1小时、12小时、1天、3天、7天
-    const checkpoints = [
-        { seconds: 5 * MINUTE,   label: '5 分钟后截止', urgency: '🚨' },
-        { seconds: 1 * HOUR,     label: '1 小时后截止', urgency: '⚠️' },
-        { seconds: 12 * HOUR,    label: '12 小时后截止', urgency: '⏰' },
-        { seconds: 1 * DAY,      label: '1 天后截止',    urgency: '📅' },
-        { seconds: 3 * DAY,      label: '3 天后截止',    urgency: '📅' },
-        { seconds: 7 * DAY,      label: '7 天后截止',    urgency: '📅' },
-    ];
-
-    for (const task of tasks) {
-        if (!task.deadline || task.done) continue;
-
-        const remaining = task.deadline - now;
-        if (remaining < 0 || remaining > 7 * DAY) continue;
-
-        for (const cp of checkpoints) {
-            // 找到第一个还没过的提醒节点
-            if (remaining <= cp.seconds) {
-                const key = `${task.id}-${cp.seconds}`;
-                if (_notifiedTasks.has(key)) break;
-                _notifiedTasks.add(key);
-
-                let title, body;
-                if (remaining < HOUR) {
-                    const mins = Math.max(1, Math.ceil(remaining / MINUTE));
-                    title = `🚨 ${mins} 分钟后截止 — Simple Todo`;
-                    body = `"${task.title}" 将在 ${mins} 分钟后截止`;
-                } else if (remaining < DAY) {
-                    const hrs = Math.ceil(remaining / HOUR);
-                    title = `⏰ ${hrs} 小时后截止 — Simple Todo`;
-                    body = `"${task.title}" 将在约 ${hrs} 小时后截止`;
-                } else {
-                    const days = Math.ceil(remaining / DAY);
-                    title = `📅 ${days} 天后截止 — Simple Todo`;
-                    body = `"${task.title}" 将在 ${days} 天后截止`;
-                }
-
-                new Notification(title, {
-                    body,
-                    tag: `todo-${task.id}-${cp.seconds}`,
-                    requireInteraction: cp.seconds <= HOUR,
-                });
-                break;
-            }
-        }
-    }
 }
 
 async function loadTasks() {

@@ -488,6 +488,9 @@ body::before {
 }
 .st-task__deadline--expired {
     color: var(--color-danger); font-weight: 600;
+}
+.st-task__deadline--urgent {
+    color: var(--color-danger); font-weight: 600;
     animation: blink 2s ease-in-out infinite;
 }
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.35} }
