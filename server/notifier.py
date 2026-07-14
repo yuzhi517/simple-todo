@@ -103,15 +103,26 @@ def check_deadlines():
     conn.close()
 
 
+_running = True
+
+def stop():
+    global _running
+    _running = False
+
+
 def main():
-    print(f"Simple Todo 通知服务已启动 (平台: {platform.system()})")
-    print(f"每 {CHECK_INTERVAL // 60} 分钟检查一次截止日期...")
-    while True:
+    print(f"  [通知服务] 已启动 (平台: {platform.system()})")
+    print(f"  [通知服务] 每 {CHECK_INTERVAL // 60} 分钟检查一次截止日期")
+    while _running:
         try:
             check_deadlines()
         except Exception as e:
-            print(f"[notifier] 检查出错: {e}")
-        time.sleep(CHECK_INTERVAL)
+            print(f"  [通知服务] 检查出错: {e}")
+        # 用短睡眠分段，以便快速响应退出信号
+        for _ in range(CHECK_INTERVAL):
+            if not _running:
+                break
+            time.sleep(1)
 
 
 if __name__ == "__main__":

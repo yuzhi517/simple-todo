@@ -10,11 +10,16 @@ import sys
 import time
 import signal
 import subprocess
+import threading
 import webbrowser
 
 
 def main():
-    root = os.path.dirname(os.path.abspath(__file__))
+    # PyInstaller 打包后文件在 sys._MEIPASS，开发时用脚本所在目录
+    if getattr(sys, 'frozen', False):
+        root = sys._MEIPASS
+    else:
+        root = os.path.dirname(os.path.abspath(__file__))
     os.chdir(root)
 
     # 启动后端
@@ -32,15 +37,13 @@ def main():
         stderr=subprocess.DEVNULL,
     )
 
-    # 启动通知服务（后台检查截止日期）
-    notifier = subprocess.Popen(
-        [sys.executable, "server/notifier.py"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-    )
+    # 启动通知服务（后台线程，PyInstaller 兼容）
+    import server.notifier as notifier_mod
+    notifier_thread = threading.Thread(target=notifier_mod.main, daemon=True)
+    notifier_thread.start()
 
     def cleanup():
-        for p in [backend, web, notifier]:
+        for p in [backend, web]:
             try:
                 p.terminate()
                 p.wait(timeout=3)
