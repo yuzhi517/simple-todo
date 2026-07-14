@@ -1,165 +1,156 @@
 # Simple Todo
 
-> 待办事项管理工具 | 全平台通用 | CLI + Web 双前端 | 双击就能用
+> 优雅的待办事项管理工具 · 全平台通用 · 双击即用
 
-## 版本说明
+**Simple Todo** 是一个轻量、美观、功能完备的待办事项管理器。它拥有 macOS / iOS 风格的液体玻璃界面、精确到分钟的截止日期提醒、跨平台系统原生通知，以及一键启动的零配置体验。
 
-| 版本 | 目录 | 简介 |
-|------|------|------|
-| **v2**（当前） | `server/` + `client/` + `web/` | 前后端分离，FastAPI + SQLite + CLI + Web |
-| **v1**（保留） | `simple-todo/todo.py` | 单文件实现，首次启动自动迁移到 v2 |
+---
 
-## 架构概览
+## 亮点
 
-```
-simple-todo/
-├── server/                     # 后端 API (FastAPI)
-│   ├── main.py                # API 入口，13 个端点
-│   ├── models.py              # Pydantic 数据模型
-│   ├── storage.py             # SQLite 持久化 (WAL 模式)
-│   └── requirements.txt       # 后端依赖
-├── client/                     # CLI 客户端 (纯标准库)
-│   ├── cli.py                 # 命令分发
-│   ├── api.py                 # urllib API 封装
-│   ├── display.py             # 终端渲染 (中文对齐)
-│   └── menu.py                # 交互式菜单
-├── web/                        # Web 前端 (原生 JS，零依赖)
-│   ├── index.html             # 入口页面
-│   ├── css/style.css          # 样式系统
-│   └── js/
-│       ├── api.js             # fetch API 封装
-│       ├── state.js           # 集中状态 + 发布订阅
-│       ├── app.js             # 应用控制器
-│       └── components/        # UI 组件
-│           ├── task-list.js   # 任务列表 + 视图切换
-│           ├── task-item.js   # 单条任务行
-│           ├── search-bar.js  # 搜索栏
-│           └── status-bar.js  # 状态栏
-├── run.py                      # 统一启动入口 (推荐)
-├── start_web.sh                # bash 启动脚本
-├── simple-todo/                # v1 单体版 (保留)
-├── LICENSE
-└── README.md
-```
+### 🫧 液体玻璃 UI
+macOS / iOS 风格的 Liquid Glass 主题——毛玻璃卡片、天空渐变背景、柔和光斑，每个任务卡片都有通透的层次感。
 
-## 功能概览
+### ⏰ 多级截止日期提醒
+支持精确到分钟的截止日期。在 **7天 / 3天 / 1天 / 12小时 / 1小时 / 5分钟** 六个时间节点自动提醒，浏览器开着弹 Web 通知，关着也能收到系统原生通知（macOS 横幅 / Windows Toast）。
 
-- **增删改查** — 添加 / 删除 / 完成 / 恢复任务
-- **截止日期** — 设定截止日期，支持"长期"选项，过期任务红色提醒
-- **聚焦标记** — 标记重要任务，聚焦任务自动置顶
-- **任务备注** — 每条任务可添加详细备注内容
-- **多级界面** — 默认简洁模式，按需展开搜索 / 管理模式
-- **搜索功能** — 防抖实时搜索
-- **中文优先** — 全中文界面
-- **REST API** — 13 个端点，curl / Postman 直接调用
-- **零依赖** — CLI 只靠 Python 标准库，Web 只用原生 JS / CSS
-- **SQLite 存储** — WAL 模式，自动从 v1 JSON 迁移
+### 🔍 聚焦自动置顶
+点击卡片上的 `◆` 即可标记聚焦。聚焦任务自动排到列表最上面，截止日期越近越靠前，重要事项一目了然。
+
+### 💻 双前端 + API
+一套后端同时驱动 **Web 前端**（液体玻璃 UI）和 **CLI 命令行**（纯标准库），REST API 可直接用 curl 调用。适合任何工作流。
+
+### 🪶 零依赖 · 零配置
+前端纯原生 JS/CSS，CLI 只用 Python 标准库。`python3 run.py` 一行命令启动全部服务，Windows / macOS / Linux 通用。
+
+---
 
 ## 快速开始
 
-### 环境要求
-
-- Python 3.8+
-- macOS / Windows / Linux
-
-### 安装
-
 ```bash
-pip install -r server/requirements.txt
+pip install -r server/requirements.txt   # 仅需一次
+python3 run.py                           # 一键启动
 ```
 
-### 启动（推荐）
+浏览器自动打开 `http://127.0.0.1:3000`，开始使用。`Ctrl+C` 关闭所有服务。
 
-```bash
-python3 run.py
-```
+---
 
-双击 `run.py` 也行。自动启动后端 + Web 前端并打开浏览器。
+## 功能
 
-### Web 前端
+### Web 界面
+| 操作 | 方式 |
+|---|---|
+| **添加任务** | 点击「添加」→ 填写标题，日期时间自动默认（可修改） |
+| **完成 / 恢复** | 卡片上的 ✓ 完成 / ↩ 恢复 按钮 |
+| **聚焦置顶** | 点击卡片左侧 `◇` → `◆`，任务瞬间排到最顶 |
+| **编辑备注** | 管理模式下的「编辑」按钮 |
+| **搜索** | 工具栏「搜索」→ 实时防抖搜索 |
+| **视图切换** | 未完成 / 全部 胶囊切换 |
+| **删除** | 管理模式下的「删除」按钮，有确认弹窗 |
 
-打开 `http://127.0.0.1:3000`
-
-| 按钮 | 功能 |
-|------|------|
-| **搜索** | 展开搜索栏，输入关键词实时搜索 |
-| **添加** | 弹出新建窗口，填写标题 / 日期 / 详细内容 |
-| **管理** | 显示聚焦 / 编辑 / 删除按钮 |
-
-点击任务标题可查看详情，删除未完成任务会弹出确认框。
+### 截止日期与通知
+- 日期和时间采用**分段数字输入框**，点击即清空直接输入
+- 默认截止日期为 **今天 + 1 分钟**，永远有效
+- 勾选「长期」则不限期
+- 后台通知服务每 5 分钟检查一次，到期前自动推送系统通知
 
 ### CLI 命令行
 
 ```bash
-python3 -m client.cli add "完成中期报告" -p 1
-python3 -m client.cli                    # 查看未完成
-python3 -m client.cli all                # 查看全部
-python3 -m client.cli done 1             # 标记完成
-python3 -m client.cli search 报告        # 搜索
-python3 -m client.cli menu               # 交互菜单
+python3 -m client.cli add "完成报告"           # 添加
+python3 -m client.cli                           # 查看未完成
+python3 -m client.cli all                       # 查看全部
+python3 -m client.cli done 1                    # 标记完成
+python3 -m client.cli search 报告               # 搜索
+python3 -m client.cli menu                      # 交互菜单
 ```
 
-### 直接调用 API
+### REST API
 
 ```bash
-curl http://127.0.0.1:8000/health
-curl -X POST -H 'Content-Type: application/json' \
-  -d '{"title":"买菜","focus":true,"notes":"需要买青菜、豆腐"}' \
-  http://127.0.0.1:8000/tasks
 curl http://127.0.0.1:8000/tasks
-curl "http://127.0.0.1:8000/tasks/search?q=报告"
+curl -X POST http://127.0.0.1:8000/tasks \
+  -H "Content-Type: application/json" \
+  -d '{"title":"买菜","deadline":1710000000,"focus":true,"notes":"青菜、豆腐"}'
 ```
-
-## API 参考
 
 | Method | Path | 说明 |
 |--------|------|------|
-| GET | `/health` | 健康检查 |
-| GET | `/tasks` | 任务列表 `?all=true` 含已完成 |
-| POST | `/tasks` | 添加任务 |
-| GET | `/tasks/search?q=` | 搜索任务 |
-| GET | `/tasks/{id}` | 获取单个任务 |
-| PUT | `/tasks/{id}/done` | 标记完成 |
-| PUT | `/tasks/{id}/undone` | 恢复未完成 |
-| DELETE | `/tasks/{id}` | 删除任务 |
-| PUT | `/tasks/{id}/priority` | 修改优先级 (CLI) |
-| PUT | `/tasks/{id}/focus` | 切换聚焦 |
-| PUT | `/tasks/{id}/deadline` | 更新截止日期 |
-| PUT | `/tasks/{id}/notes` | 更新备注 |
+| `GET` | `/health` | 健康检查 |
+| `GET` | `/tasks` | 任务列表 `?all=true` 含已完成 |
+| `POST` | `/tasks` | 创建任务 |
+| `GET` | `/tasks/search?q=` | 搜索任务 |
+| `GET` | `/tasks/{id}` | 获取任务详情 |
+| `PUT` | `/tasks/{id}/done` | 标记完成 |
+| `PUT` | `/tasks/{id}/undone` | 恢复未完成 |
+| `DELETE` | `/tasks/{id}` | 删除任务 |
+| `PUT` | `/tasks/{id}/priority` | 修改优先级 |
+| `PUT` | `/tasks/{id}/focus` | 切换聚焦 |
+| `PUT` | `/tasks/{id}/deadline` | 更新截止日期 |
+| `PUT` | `/tasks/{id}/notes` | 更新备注 |
+
+---
+
+## 架构
+
+```
+simple-todo/
+├── run.py                         # 统一启动入口（推荐双击运行）
+├── server/
+│   ├── main.py                    # FastAPI 后端（13 个端点）
+│   ├── models.py                  # Pydantic 数据模型
+│   ├── storage.py                 # SQLite + WAL 持久化
+│   └── notifier.py                # 跨平台系统通知服务
+├── client/
+│   ├── cli.py                     # CLI 命令分发
+│   ├── api.py                     # urllib API 封装（纯标准库）
+│   ├── display.py                 # 终端渲染（CJK 对齐）
+│   └── menu.py                    # 交互式菜单
+├── web/
+│   ├── index.html                 # 入口页面
+│   ├── css/style.css              # Liquid Glass 主题
+│   └── js/
+│       ├── app.js                 # 应用控制器 + 通知逻辑
+│       ├── api.js                 # fetch API 封装
+│       ├── state.js               # 集中状态管理（发布/订阅）
+│       └── components/
+│           ├── task-item.js       # 任务卡片渲染
+│           ├── task-list.js       # 任务列表 + 视图切换
+│           ├── search-bar.js      # 搜索栏
+│           └── status-bar.js      # 状态栏
+├── simple-todo/todo.py            # v1 单文件版（保留）
+└── server/requirements.txt
+```
+
+### 启动后的进程
+
+```
+run.py
+├── uvicorn (API)         :8000
+├── http.server (Web)     :3000
+└── notifier.py (通知)     后台静默
+```
+
+---
 
 ## 数据存储
 
-数据库文件：`~/.simple_todo/tasks.db`
+SQLite 数据库位于 `~/.simple_todo/tasks.db`，WAL 模式，v1 JSON 自动迁移。
 
-```sql
-CREATE TABLE tasks (
-    id          INTEGER PRIMARY KEY AUTOINCREMENT,
-    title       TEXT NOT NULL,
-    priority    INTEGER NOT NULL DEFAULT 1,
-    deadline    REAL,
-    focus       INTEGER NOT NULL DEFAULT 0,
-    notes       TEXT,
-    done        INTEGER NOT NULL DEFAULT 0,
-    created_at  REAL NOT NULL,
-    done_at     REAL
-);
-```
+排序规则：**聚焦优先 → 截止日期近的优先 → 创建时间早的优先**。
 
-数据按 **聚焦 → 截止日期 → 创建时间** 排序。
-
-## 环境变量
-
-| 变量 | 说明 | 默认值 |
-|------|------|--------|
-| `TODO_API_URL` | 后端 API 地址 | `http://127.0.0.1:8000` |
+---
 
 ## 设计原则
 
-1. **前后端分离** — 一个后端，CLI + Web 双前端
-2. **零依赖客户端** — CLI 用 Python 标准库，Web 用原生 JS/CSS
-3. **双击就能用** — `run.py` 一键启动，全平台通用
-4. **中文优先** — 全中文 UI + 终端对齐
-5. **API 优先** — 所有功能通过 REST API 暴露
+1. **零依赖** — CLI 纯标准库，Web 原生 JS/CSS，不引入任何框架
+2. **一键启动** — `run.py` 双击即用，无需配置
+3. **跨平台** — Windows / macOS / Linux 均可用，系统通知各自原生
+4. **API 优先** — 所有功能通过 REST API 暴露，便于扩展
+5. **中文优先** — 全中文界面，终端宽度自适应中文对齐
+
+---
 
 ## 许可证
 
