@@ -4,7 +4,14 @@
 // 统一返回 { ok: true, data } 或 { ok: false, error }
 // ==========================================
 
-const BASE_URL = window.TODO_API_URL || 'http://127.0.0.1:8000';
+const params = new URLSearchParams(window.location.search);
+const apiPort = params.get('apiPort');
+const validApiPort = /^\d{1,5}$/.test(apiPort || '')
+    && Number(apiPort) >= 1
+    && Number(apiPort) <= 65535;
+const BASE_URL = validApiPort
+    ? `http://127.0.0.1:${Number(apiPort)}`
+    : (window.TODO_API_URL || 'http://127.0.0.1:8000');
 
 /**
  * 内部请求函数

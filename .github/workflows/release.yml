@@ -23,16 +23,23 @@ jobs:
       - name: Install deps
         run: pip install --default-timeout=120 --retries 10 -r server/requirements.txt pyinstaller
 
+      - name: Test
+        run: python -m unittest discover -s tests -v
+
       - name: Build
         shell: bash
         run: |
           if [ "${{ matrix.os }}" = "windows-latest" ]; then
-            pyinstaller --onefile --name "SimpleTodo" --add-data "web;web" --add-data "server;server" run.py
+            pyinstaller --clean --onefile --name "SimpleTodo" --add-data "web;web" --add-data "server;server" run.py
             echo "ASSET=dist/SimpleTodo.exe" >> $GITHUB_ENV
           else
-            pyinstaller --onefile --name "SimpleTodo" --add-data "web:web" --add-data "server:server" run.py
+            pyinstaller --clean --onefile --name "SimpleTodo" --add-data "web:web" --add-data "server:server" run.py
             echo "ASSET=dist/SimpleTodo" >> $GITHUB_ENV
           fi
+
+      - name: Smoke test packaged app
+        shell: bash
+        run: '"${{ env.ASSET }}" --smoke-test'
 
       - name: Upload to Release
         uses: softprops/action-gh-release@v1
