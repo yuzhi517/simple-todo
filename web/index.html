@@ -4,9 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simple Todo - 今日节奏</title>
-    <link rel="stylesheet" href="css/style.css?v=12">
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="css/style.css?v=14">
 </head>
 <body>
+    <div id="weather-scene" class="weather-scene" aria-hidden="true">
+        <canvas id="weather-background" class="weather-scene__canvas"></canvas>
+        <canvas id="weather-atmosphere" class="weather-scene__canvas"></canvas>
+        <canvas id="weather-glass" class="weather-scene__canvas"></canvas>
+        <div class="weather-scene__wash"></div>
+    </div>
+
     <div id="app">
         <!-- Header + 工具栏 -->
         <header class="st-header">
@@ -125,6 +133,6 @@
     <script>
         window.TODO_API_URL = window.TODO_API_URL || 'http://127.0.0.1:8000';
     </script>
-    <script type="module" src="js/app.js?v=13"></script>
+    <script type="module" src="js/app.js?v=15"></script>
 </body>
 </html>

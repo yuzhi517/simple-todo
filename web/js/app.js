@@ -5,6 +5,7 @@
 
 import * as api from './api.js?v=4';
 import * as state from './state.js?v=4';
+import { initWeatherScene } from './weather-scene.js?v=2';
 import { renderStatusBar } from './components/status-bar.js?v=4';
 import { renderSearchBar, focusSearchInput } from './components/search-bar.js?v=4';
 import { renderTaskList } from './components/task-list.js?v=4';
@@ -17,6 +18,8 @@ const QUOTES = [
     ['你不必看完整个楼梯，只需迈出第一步。', '— 马丁·路德·金'],
 ];
 const _quoteIndex = Math.floor(Math.random() * QUOTES.length);
+
+initWeatherScene();
 
 async function boot() {
     const health = await api.healthCheck();
