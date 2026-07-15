@@ -160,7 +160,7 @@ def check_deadlines():
 
         for seconds in CHECKPOINTS:
             if remaining <= seconds:
-                key = f"{task['id']}-{seconds}"
+                key = (task['id'], seconds)
                 if key in _notified:
                     break
                 _notified.add(key)
