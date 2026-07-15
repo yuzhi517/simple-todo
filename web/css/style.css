@@ -830,15 +830,6 @@ body::before {
     font-size: 12px;
     font-style: italic;
 }
-.st-dashboard h2,
-.st-quote-author {
-    transition: opacity .22s ease, transform .22s ease;
-}
-.st-dashboard h2.st-quote--leaving,
-.st-quote-author.st-quote--leaving {
-    opacity: 0;
-    transform: translateY(3px);
-}
 .st-quick-add {
     background: rgba(255,255,255,.54);
     border-color: rgba(255,255,255,.82);
@@ -1219,6 +1210,4 @@ body::before,
     .st-modal__btn,
     .st-search__close { transition: none; }
     .st-modal__box { animation: none; }
-    .st-dashboard h2,
-    .st-quote-author { transition: none; }
 }

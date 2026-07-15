@@ -16,7 +16,7 @@ const QUOTES = [
     ['行动是焦虑最好的解药。', '— 大卫·凯斯勒'],
     ['你不必看完整个楼梯，只需迈出第一步。', '— 马丁·路德·金'],
 ];
-let _quoteIndex = new Date().getDate() % QUOTES.length;
+const _quoteIndex = Math.floor(Math.random() * QUOTES.length);
 
 async function boot() {
     const health = await api.healthCheck();
@@ -43,32 +43,6 @@ async function boot() {
 
     wireEvents();
     _wireCreateModal();
-    _startQuoteRotation();
-}
-
-function _startQuoteRotation() {
-    window.setInterval(() => {
-        const title = document.querySelector('.st-dashboard h2');
-        const author = document.querySelector('.st-quote-author');
-        if (!title || !author || document.hidden) return;
-
-        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        const update = () => {
-            _quoteIndex = (_quoteIndex + 1) % QUOTES.length;
-            title.textContent = QUOTES[_quoteIndex][0];
-            author.textContent = QUOTES[_quoteIndex][1];
-            title.classList.remove('st-quote--leaving');
-            author.classList.remove('st-quote--leaving');
-        };
-
-        if (reducedMotion) {
-            update();
-            return;
-        }
-        title.classList.add('st-quote--leaving');
-        author.classList.add('st-quote--leaving');
-        window.setTimeout(update, 220);
-    }, 12000);
 }
 
 function renderDashboard(s = state.getState()) {
