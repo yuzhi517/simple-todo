@@ -9,6 +9,15 @@ import { renderStatusBar } from './components/status-bar.js?v=4';
 import { renderSearchBar, focusSearchInput } from './components/search-bar.js?v=4';
 import { renderTaskList } from './components/task-list.js?v=4';
 
+const QUOTES = [
+    ['专注于当下，其他的会自行到位。', '— 加里·凯勒'],
+    ['伟大的工作来自持续的小步前进。', '— 詹姆斯·克利尔'],
+    ['开始做你能做的事，用你拥有的，去你所在的地方。', '— 西奥多·罗斯福'],
+    ['行动是焦虑最好的解药。', '— 大卫·凯斯勒'],
+    ['你不必看完整个楼梯，只需迈出第一步。', '— 马丁·路德·金'],
+];
+let _quoteIndex = new Date().getDate() % QUOTES.length;
+
 async function boot() {
     const health = await api.healthCheck();
     state.setConnectionOk(health.ok);
@@ -16,12 +25,14 @@ async function boot() {
     await loadTasks();
 
     renderToolbar();
+    renderDashboard();
     renderSearchBar(document.getElementById('search-bar'));
     renderTaskList(document.getElementById('task-list'));
 
     _refreshStatusBar(state.getState());
 
     state.on('change', (s) => {
+        renderDashboard(s);
         _syncPanels(s);
         _syncToolbar(s);
         _refreshStatusBar(s);
@@ -32,6 +43,82 @@ async function boot() {
 
     wireEvents();
     _wireCreateModal();
+    _startQuoteRotation();
+}
+
+function _startQuoteRotation() {
+    window.setInterval(() => {
+        const title = document.querySelector('.st-dashboard h2');
+        const author = document.querySelector('.st-quote-author');
+        if (!title || !author || document.hidden) return;
+
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const update = () => {
+            _quoteIndex = (_quoteIndex + 1) % QUOTES.length;
+            title.textContent = QUOTES[_quoteIndex][0];
+            author.textContent = QUOTES[_quoteIndex][1];
+            title.classList.remove('st-quote--leaving');
+            author.classList.remove('st-quote--leaving');
+        };
+
+        if (reducedMotion) {
+            update();
+            return;
+        }
+        title.classList.add('st-quote--leaving');
+        author.classList.add('st-quote--leaving');
+        window.setTimeout(update, 220);
+    }, 12000);
+}
+
+function renderDashboard(s = state.getState()) {
+    const el = document.getElementById('today-dashboard');
+    if (!el) return;
+
+    const active = s.allTasks.filter(task => !task.done);
+    const done = s.allTasks.filter(task => task.done);
+    const total = s.allTasks.length;
+    const progress = total ? Math.round((done.length / total) * 100) : 0;
+    const focus = active.filter(task => task.focus).length;
+    const circumference = 2 * Math.PI * 40;
+    const offset = circumference * (1 - progress / 100);
+    const quote = QUOTES[_quoteIndex];
+
+    el.innerHTML = `
+        <div class="st-dashboard__copy">
+            <span class="st-eyebrow">${new Date().toLocaleDateString('zh-CN', {
+                month: 'long', day: 'numeric', weekday: 'long'
+            })}</span>
+            <h2>${quote[0]}</h2>
+            <span class="st-quote-author">${quote[1]}</span>
+            <p>${active.length
+                ? `还有 ${active.length} 项待完成${focus ? ` · ${focus} 项专注任务` : ''}`
+                : '所有任务都处理完了，给自己留一点空白。'}</p>
+            <label class="st-quick-add">
+                <span aria-hidden="true">+</span>
+                <input id="quick-add-input" type="text"
+                       placeholder="快速添加任务，按 Enter 继续" autocomplete="off">
+            </label>
+        </div>
+        <div class="st-progress" aria-label="今日完成 ${progress}%">
+            <div class="st-progress__ring">
+                <svg viewBox="0 0 100 100" aria-hidden="true">
+                    <circle class="st-progress__track" cx="50" cy="50" r="40"></circle>
+                    <circle class="st-progress__value" cx="50" cy="50" r="40"
+                            stroke-dasharray="${circumference}"
+                            stroke-dashoffset="${offset}"></circle>
+                </svg>
+                <strong>${progress}<small>%</small></strong>
+            </div>
+            <span>今日完成</span>
+        </div>`;
+
+    const quickInput = el.querySelector('#quick-add-input');
+    quickInput?.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' && quickInput.value.trim()) {
+            _openCreateModal(quickInput.value.trim());
+        }
+    });
 }
 
 async function loadTasks() {
@@ -108,8 +195,8 @@ function _refreshStatusBar(s) {
 
 // ── 创建任务弹窗 ──────────────────────────────────────────
 
-function _openCreateModal() {
-    document.getElementById('create-title').value = '';
+function _openCreateModal(prefill = '') {
+    document.getElementById('create-title').value = prefill;
     document.getElementById('create-longterm').checked = false;
     document.getElementById('create-focus').checked = false;
     document.getElementById('create-notes').value = '';
@@ -270,6 +357,19 @@ async function _submitCreate() {
 
 function wireEvents() {
     const app = document.getElementById('app');
+
+    document.addEventListener('keydown', (event) => {
+        if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+            event.preventDefault();
+            _openCreateModal();
+        }
+        if (event.key === '/' && !['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) {
+            event.preventDefault();
+            state.setManageMode(false);
+            state.setSearchMode(true);
+            focusSearchInput(document.getElementById('search-bar'));
+        }
+    });
 
     app.addEventListener('task-done', async (e) => {
         const { id } = e.detail;

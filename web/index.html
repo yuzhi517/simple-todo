@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Todo — 待办事项</title>
-    <link rel="stylesheet" href="css/style.css?v=4">
+    <title>Simple Todo - 今日节奏</title>
+    <link rel="stylesheet" href="css/style.css?v=12">
 </head>
 <body>
     <div id="app">
@@ -12,10 +12,12 @@
         <header class="st-header">
             <div class="st-header__left">
                 <h1 class="st-title">Simple Todo</h1>
-                <span class="st-subtitle">待办事项</span>
+                <span class="st-subtitle">今日节奏</span>
             </div>
             <div id="toolbar" class="st-toolbar"></div>
         </header>
+
+        <section id="today-dashboard" class="st-dashboard" aria-label="今日概览"></section>
 
         <!-- 搜索面板（可折叠） -->
         <div id="search-panel" class="st-panel st-panel--collapsed">
@@ -123,6 +125,6 @@
     <script>
         window.TODO_API_URL = window.TODO_API_URL || 'http://127.0.0.1:8000';
     </script>
-    <script type="module" src="js/app.js?v=5"></script>
+    <script type="module" src="js/app.js?v=12"></script>
 </body>
 </html>
