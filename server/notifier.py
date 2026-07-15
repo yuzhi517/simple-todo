@@ -12,6 +12,7 @@ import sys
 import signal
 import argparse
 import json
+import threading
 from datetime import datetime
 
 DB_PATH = os.path.expanduser("~/.simple_todo/tasks.db")
@@ -225,20 +226,25 @@ def main():
     # 加载已通知记录（防重复）
     _load_notified()
 
-    # 防止重复启动
+    # 防止重复启动（在子进程/线程模式下跳过 PID 检查）
     pid = read_pid()
     if pid is not None and is_running(pid):
         print(f"通知服务已在运行中 (PID: {pid})")
-        sys.exit(1)
+        return  # 线程/子进程中用 return 而不是 sys.exit，避免误杀宿主进程
 
     write_pid()
 
-    # 注册信号处理
-    signal.signal(signal.SIGINT, _handle_signal)
-    try:
-        signal.signal(signal.SIGTERM, _handle_signal)
-    except AttributeError:
-        pass  # Windows 不支持 SIGTERM handler
+    # 注册信号处理 — 仅在主线程中有效
+    is_main = threading.current_thread() is threading.main_thread()
+    if is_main:
+        try:
+            signal.signal(signal.SIGINT, _handle_signal)
+        except ValueError:
+            pass
+        try:
+            signal.signal(signal.SIGTERM, _handle_signal)
+        except (ValueError, AttributeError):
+            pass
 
     try:
         print(f"  [通知服务] 已启动 (平台: {platform.system()})")
